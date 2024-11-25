@@ -3,7 +3,9 @@ import './App.css'
 import { RouterProvider, createBrowserRouter } from 'react-router-dom'
 import ProtectedRoute from './ProtectedRoute'
 import LandingPageTemplate from './ui/templates/LandingTemplate'
-import LandingPage from './ui/pages/LandingPage'
+import LandingPage from './ui/Components/LandingPage'
+import AuthTemplete from './ui/templates/AuthTemplete'
+import Register from './ui/Components/Register'
 
 
 const router = createBrowserRouter([
@@ -15,6 +17,12 @@ const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children:[{index:true,element:<LandingPage />}]
+  },{
+    path:'/auth',
+    element:<AuthTemplete />,
+    children:[
+      {path:'user/register',element:<Register />},
+    ]
   }
 ])
 function App() {
