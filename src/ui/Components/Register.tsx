@@ -4,7 +4,7 @@ import { gql, useMutation } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 
 interface FormData {
-  fullname: string;
+  username: string;
   email: string;
   password: string;
 }
@@ -31,20 +31,21 @@ const Register: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
 
-  const goLogin = () => navigate('/auth/user/login');
+  const goVerify = () => navigate('/auth/user/otp');
 
   const onSubmit = async (formData: FormData) => {
     try {
       await registerUser({
         variables: {
-          username: formData.fullname,
+          username: formData.username,
           email: formData.email,
           password: formData.password,
         },
       });
-      goLogin();
+      goVerify();
     } catch (err: any) {
       if (err.response) {
+        console.log("🚀 ~ onSubmit ~ err:", err)
         setErrorMessage(err.response.data.message);
       } else {
         setErrorMessage('Something went wrong. Please try again.');
@@ -57,13 +58,13 @@ const Register: React.FC = () => {
       <h2>Signup</h2>
       <form onSubmit={handleSubmit(onSubmit)}>
         <div>
-          <label htmlFor="fullname">Full Name</label>
+          <label htmlFor="username">Full Name</label>
           <input
             type="text"
-            id="fullname"
-            {...register('fullname', { required: 'Full name is required' })}
+            id="username"
+            {...register('username', { required: 'User name is required' })}
           />
-          {errors.fullname && <p>{errors.fullname.message}</p>}
+          {errors.username && <p>{errors.username.message}</p>}
         </div>
         <div>
           <label htmlFor="email">Email</label>
