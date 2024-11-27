@@ -15,6 +15,7 @@ const VERIFY_OTP = gql`
   }
 `;
 
+
 const VerifyOtp: React.FC = () => {
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>();
   const [verifyOtp, { loading, error }] = useMutation(VERIFY_OTP);
