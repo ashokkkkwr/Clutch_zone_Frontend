@@ -7,6 +7,7 @@ import LandingPage from './ui/Components/LandingPage'
 import AuthTemplete from './ui/templates/AuthTemplete'
 import Register from './ui/Components/Register'
 import VerifyOtp from './ui/Components/VerifyOtp'
+import Login from './ui/Components/Login'
 
 const router = createBrowserRouter([
   {
@@ -22,7 +23,8 @@ const router = createBrowserRouter([
     element:<AuthTemplete />,
     children:[
       {path:'user/register',element:<Register />},
-      {path:'user/otp',element:<VerifyOtp />}
+      {path:'user/otp',element:<VerifyOtp />},
+      {path:'user/login',element:<Login />}
     ]
   }
 ])

@@ -1,57 +1,48 @@
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { gql, useMutation } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import React, {useState} from 'react';
+import {useForm} from 'react-hook-form';
+import {gql, useMutation} from '@apollo/client';
+import { useNavigate } from 'react-router-dom'; 
+import {motion} from 'framer-motion';
 
-interface FormData {
-  username: string;
-  email: string;
-  password: string;
+interface FormData{
+    email:string;
+    password:string;
 }
-
-const REGISTER_USER = gql`
-  mutation Register($username: String!, $email: String!, $password: String!) {
-    register(username: $username, email: $email, password: $password) {
-      id
-      username
-      email
+const LOGIN_USER=gql`
+    mutation Login($email:String!, $password:String!){
+    login(email:$email,password:$password){
+    
+    
+    token}
     }
-  }
 `;
+const Login:React.FC=()=>{
+    const {register,handleSubmit,formState:{errors}}=useForm<FormData>();
+    const [loginUser,{data,loading,error}]=useMutation(LOGIN_USER) 
+    const [errorMessage,setErrorMessage]=useState('');
+    const navigate=useNavigate();
+    const onSubmit=async(formData:FormData)=>{
+        try{
+            await loginUser({
+                variables:{
+                    email:formData.email,
+                    password:formData.password,
+                }
+            })
 
-const Register: React.FC = () => {
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>();
-  const [registerUser, { data, loading, error }] = useMutation(REGISTER_USER);
-  const [errorMessage, setErrorMessage] = useState('');
-  const navigate = useNavigate();
-
-  const goVerify = () => navigate('/auth/user/otp');
-
-  const onSubmit = async (formData: FormData) => {
-    try {
-      await registerUser({
-        variables: {
-          username: formData.username,
-          email: formData.email,
-          password: formData.password,
-        },
-      });
-      goVerify();
-    } catch (err: any) {
-      setErrorMessage('Something went wrong. Please try again.');
+        }catch(err:any){
+            setErrorMessage('Something went wrong. Please try again.')
+        }
     }
-  };
-
-  return (
-    <div className="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center px-4">
+    return(
+        <div className="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center px-4">
       <motion.h2
         className="text-4xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-500"
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6 }}
       >
-        Signup to LevelUp
+        Login to LevelUp
       </motion.h2>
 
       <motion.form
@@ -61,17 +52,7 @@ const Register: React.FC = () => {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="relative">
-          <label htmlFor="username" className="block mb-2 text-sm font-medium">Full Name</label>
-          <input
-            type="text"
-            id="username"
-            {...register('username', { required: 'User name is required' })}
-            className="w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-4 focus:ring-cyan-500 bg-gray-900 border border-gray-600 text-white placeholder-gray-500"
-            placeholder="John Doe"
-          />
-          {errors.username && <p className="text-red-400 text-sm mt-2">{errors.username.message}</p>}
-        </div>
+       
 
         <div className="relative">
           <label htmlFor="email" className="block mb-2 text-sm font-medium">Email</label>
@@ -114,15 +95,14 @@ const Register: React.FC = () => {
           className="w-full bg-gradient-to-r from-purple-500 to-pink-500 py-2 rounded-lg text-lg font-semibold shadow-lg hover:from-pink-500 hover:to-purple-500 transition-all duration-300 disabled:opacity-50"
           disabled={loading}
         >
-          {loading ? 'Login in...' : 'Login'}
+          {loading ? 'Signing up...' : 'Signup'}
         </button>
       </motion.form>
 
-      {data && <p className="text-green-400 mt-4">User {data.register.username} registered successfully!</p>}
+      {data && <p className="text-green-400 mt-4">User  registered successfully!</p>}
       {error && <p className="text-red-400 mt-4">Error: {error.message}</p>}
       {errorMessage && <p className="text-red-400 mt-4">{errorMessage}</p>}
     </div>
-  );
-};
-
-export default Register;
+    )
+}
+export default Login;
