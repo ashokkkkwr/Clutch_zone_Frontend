@@ -23,12 +23,18 @@ const Login:React.FC=()=>{
     const navigate=useNavigate();
     const onSubmit=async(formData:FormData)=>{
         try{
-            await loginUser({
+            const response=await loginUser({
                 variables:{
                     email:formData.email,
                     password:formData.password,
                 }
             })
+            if (response?.data?.login?.token) {
+              localStorage.setItem('token', response.data.login.token);
+
+              navigate('/dashboard'); // Redirect to dashboard on successful login
+            }
+            console.log("🚀 ~ onSubmit ~ response:", response)
 
         }catch(err:any){
             setErrorMessage('Something went wrong. Please try again.')
@@ -95,7 +101,7 @@ const Login:React.FC=()=>{
           className="w-full bg-gradient-to-r from-purple-500 to-pink-500 py-2 rounded-lg text-lg font-semibold shadow-lg hover:from-pink-500 hover:to-purple-500 transition-all duration-300 disabled:opacity-50"
           disabled={loading}
         >
-          {loading ? 'Signing up...' : 'Signup'}
+          {loading ? 'Login up...' : 'Login '}
         </button>
       </motion.form>
 
