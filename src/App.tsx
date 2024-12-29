@@ -24,7 +24,8 @@ const router = createBrowserRouter([
     children:[
       {path:'user/register',element:<Register />},
       {path:'user/otp',element:<VerifyOtp />},
-      {path:'user/login',element:<Login />}
+      {path:'user/login',element:<Login />},
+      {path:'user/landing',element:<LandingPage />}
     ]
   }
 ])
