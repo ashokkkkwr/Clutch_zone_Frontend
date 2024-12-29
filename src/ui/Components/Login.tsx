@@ -32,18 +32,17 @@ const Login:React.FC=()=>{
             if (response?.data?.login?.token) {
               localStorage.setItem('token', response.data.login.token);
 
-              navigate('/dashboard'); // Redirect to dashboard on successful login
+              navigate('/auth/user/landing'); // Redirect to dashboard on successful login
             }
-            console.log("🚀 ~ onSubmit ~ response:", response)
+            console.log("\uD83D\uDE80 ~ onSubmit ~ response:", response)
 
         }catch(err:any){
             setErrorMessage('Something went wrong. Please try again.')
         }
     }
     return(
-        <div className="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center px-4">
+        <div>
       <motion.h2
-        className="text-4xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-500"
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6 }}
@@ -53,15 +52,12 @@ const Login:React.FC=()=>{
 
       <motion.form
         onSubmit={handleSubmit(onSubmit)}
-        className="bg-gray-800 p-10 rounded-lg shadow-xl w-full max-w-md space-y-6"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
-       
-
-        <div className="relative">
-          <label htmlFor="email" className="block mb-2 text-sm font-medium">Email</label>
+        <div>
+          <label htmlFor="email">Email</label>
           <input
             type="email"
             id="email"
@@ -72,14 +68,13 @@ const Login:React.FC=()=>{
                 message: 'Invalid email address',
               },
             })}
-            className="w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-500 bg-gray-900 border border-gray-600 text-white placeholder-gray-500"
             placeholder="example@mail.com"
           />
-          {errors.email && <p className="text-red-400 text-sm mt-2">{errors.email.message}</p>}
+          {errors.email && <p>{errors.email.message}</p>}
         </div>
 
-        <div className="relative">
-          <label htmlFor="password" className="block mb-2 text-sm font-medium">Password</label>
+        <div>
+          <label htmlFor="password">Password</label>
           <input
             type="password"
             id="password"
@@ -90,24 +85,22 @@ const Login:React.FC=()=>{
                 message: 'Password must be at least 6 characters long',
               },
             })}
-            className="w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-4 focus:ring-pink-500 bg-gray-900 border border-gray-600 text-white placeholder-gray-500"
             placeholder="Enter a secure password"
           />
-          {errors.password && <p className="text-red-400 text-sm mt-2">{errors.password.message}</p>}
+          {errors.password && <p>{errors.password.message}</p>}
         </div>
 
         <button
           type="submit"
-          className="w-full bg-gradient-to-r from-purple-500 to-pink-500 py-2 rounded-lg text-lg font-semibold shadow-lg hover:from-pink-500 hover:to-purple-500 transition-all duration-300 disabled:opacity-50"
           disabled={loading}
         >
-          {loading ? 'Login up...' : 'Login '}
+          {loading ? 'Logging in...' : 'Login'}
         </button>
       </motion.form>
 
-      {data && <p className="text-green-400 mt-4">User  registered successfully!</p>}
-      {error && <p className="text-red-400 mt-4">Error: {error.message}</p>}
-      {errorMessage && <p className="text-red-400 mt-4">{errorMessage}</p>}
+      {data && <p>User registered successfully!</p>}
+      {error && <p>Error: {error.message}</p>}
+      {errorMessage && <p>{errorMessage}</p>}
     </div>
     )
 }
