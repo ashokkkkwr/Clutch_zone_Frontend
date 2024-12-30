@@ -9,12 +9,18 @@ interface FormData{
     password:string;
 }
 const LOGIN_USER=gql`
-    mutation Login($email:String!, $password:String!){
-    login(email:$email,password:$password){
-    
-    
-    token}
-    }
+   
+
+mutation Login($email: String!, $password: String!) {
+  login(email: $email, password: $password) {
+    user {
+      email,
+      role 
+    },
+    token
+  }
+}
+
 `;
 const Login:React.FC=()=>{
     const {register,handleSubmit,formState:{errors}}=useForm<FormData>();
@@ -29,11 +35,19 @@ const Login:React.FC=()=>{
                     password:formData.password,
                 }
             })
-            if (response?.data?.login?.token) {
+            if (response?.data?.login.token) {
+              console.log('object');
               localStorage.setItem('token', response.data.login.token);
-
-              navigate('/auth/user/landing'); // Redirect to dashboard on successful login
+            
+              if(response.data.login.user.role==='admin'){
+                console.log('1');
+                navigate('/auth/admin/landing'); // Redirect to dashboard on successful login
+              }else {
+                navigate('/auth/user/landing');
+              }
+         
             }
+            console.log(response.data.login.user.role)
             console.log("\uD83D\uDE80 ~ onSubmit ~ response:", response)
 
         }catch(err:any){
@@ -42,14 +56,7 @@ const Login:React.FC=()=>{
     }
     return(
         <div>
-      <motion.h2
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6 }}
-      >
-        Login to LevelUp
-      </motion.h2>
-
+        Login to LevelUp 
       <motion.form
         onSubmit={handleSubmit(onSubmit)}
         initial={{ opacity: 0 }}
@@ -80,10 +87,7 @@ const Login:React.FC=()=>{
             id="password"
             {...register('password', {
               required: 'Password is required',
-              minLength: {
-                value: 6,
-                message: 'Password must be at least 6 characters long',
-              },
+             
             })}
             placeholder="Enter a secure password"
           />

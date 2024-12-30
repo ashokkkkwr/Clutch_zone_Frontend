@@ -3,11 +3,12 @@ import './App.css'
 import { RouterProvider, createBrowserRouter } from 'react-router-dom'
 import ProtectedRoute from './ProtectedRoute'
 import LandingPageTemplate from './ui/templates/LandingTemplate'
-import LandingPage from './ui/Components/LandingPage'
+import LandingPage from './ui/pages/LandingPage'
+import AdminLanding from './ui/pages/AdminLanding'
 import AuthTemplete from './ui/templates/AuthTemplete'
-import Register from './ui/Components/Register'
+import Register from './ui/pages/Register'
 import VerifyOtp from './ui/Components/VerifyOtp'
-import Login from './ui/Components/Login'
+import Login from './ui/pages/Login'
 
 const router = createBrowserRouter([
   {
@@ -25,7 +26,8 @@ const router = createBrowserRouter([
       {path:'user/register',element:<Register />},
       {path:'user/otp',element:<VerifyOtp />},
       {path:'user/login',element:<Login />},
-      {path:'user/landing',element:<LandingPage />}
+      {path:'user/landing',element:<LandingPage />},
+      {path:'admin/landing',element:<AdminLanding />}
     ]
   }
 ])
