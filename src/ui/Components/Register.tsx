@@ -144,6 +144,8 @@ const Register: React.FC = () => {
           <button className="w-full flex items-center justify-center space-x-3 py-3 bg-[#4267B2] text-white rounded-md">
           <FaFacebook />
 
+
+
             <span>Sign up with Facebook</span>
           </button>
         </div>
