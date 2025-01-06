@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { gql, useMutation } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { gql, useMutation } from "@apollo/client";
+import { useNavigate } from "react-router-dom";
+import img from '../../assets/Rectangle 4.png';
+import { FaFacebook, FaGoogle } from "react-icons/fa";
 
 interface FormData {
   username: string;
@@ -21,12 +22,16 @@ const REGISTER_USER = gql`
 `;
 
 const Register: React.FC = () => {
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormData>();
   const [registerUser, { data, loading, error }] = useMutation(REGISTER_USER);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
 
-  const goVerify = () => navigate('/auth/user/otp');
+  const goVerify = () => navigate("/auth/user/otp");
 
   const onSubmit = async (formData: FormData) => {
     try {
@@ -39,88 +44,119 @@ const Register: React.FC = () => {
       });
       goVerify();
     } catch (err: any) {
-      setErrorMessage('Something went wrong. Please try again.');
+      setErrorMessage("Something went wrong. Please try again.");
     }
   };
 
   return (
-    <div className="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center px-4">
-      <motion.h2
-        className="text-4xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-500"
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6 }}
-      >
-        Signup to LevelUp
-      </motion.h2>
+    <div className="flex min-h-screen bg-[#0F172A]">
+      {/* Left Section */}
+      <div className="flex-1 flex flex-col justify-center items-center px-8">
+        <h1 className="text-5xl font-bold text-white mb-6">Create Account</h1>
+        <p className="text-gray-400 mb-10">Join us and get started today!</p>
 
-      <motion.form
-        onSubmit={handleSubmit(onSubmit)}
-        className="bg-gray-800 p-10 rounded-lg shadow-xl w-full max-w-md space-y-6"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-      >
-        <div className="relative">
-          <label htmlFor="username" className="block mb-2 text-sm font-medium">Full Name</label>
-          <input
-            type="text"
-            id="username"
-            {...register('username', { required: 'User name is required' })}
-            className="w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-4 focus:ring-cyan-500 bg-gray-900 border border-gray-600 text-white placeholder-gray-500"
-            placeholder="John Doe"
-          />
-          {errors.username && <p className="text-red-400 text-sm mt-2">{errors.username.message}</p>}
-        </div>
-
-        <div className="relative">
-          <label htmlFor="email" className="block mb-2 text-sm font-medium">Email</label>
-          <input
-            type="email"
-            id="email"
-            {...register('email', {
-              required: 'Email is required',
-              pattern: {
-                value: /^[^@ ]+@[^@ ]+\.[^@ .]{2,}$/,
-                message: 'Invalid email address',
-              },
-            })}
-            className="w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-500 bg-gray-900 border border-gray-600 text-white placeholder-gray-500"
-            placeholder="example@mail.com"
-          />
-          {errors.email && <p className="text-red-400 text-sm mt-2">{errors.email.message}</p>}
-        </div>
-
-        <div className="relative">
-          <label htmlFor="password" className="block mb-2 text-sm font-medium">Password</label>
-          <input
-            type="password"
-            id="password"
-            {...register('password', {
-              required: 'Password is required',
-              minLength: {
-                value: 6,
-                message: 'Password must be at least 6 characters long',
-              },
-            })}
-            className="w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-4 focus:ring-pink-500 bg-gray-900 border border-gray-600 text-white placeholder-gray-500"
-            placeholder="Enter a secure password"
-          />
-          {errors.password && <p className="text-red-400 text-sm mt-2">{errors.password.message}</p>}
-        </div>
-
-        <button
-          type="submit"
-          className="w-full bg-gradient-to-r from-purple-500 to-pink-500 py-2 rounded-lg text-lg font-semibold shadow-lg hover:from-pink-500 hover:to-purple-500 transition-all duration-300 disabled:opacity-50"
-          disabled={loading}
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="w-full max-w-sm space-y-4"
         >
-          {loading ? 'Login in...' : 'Login'}
-        </button>
-      </motion.form>
+          {/* Username Field */}
+          <div>
+            <input
+              type="text"
+              className="w-full p-3 rounded-md border border-gray-300 bg-[#1E293B] text-white"
+              placeholder="Full Name"
+              {...register("username", {
+                required: "Full name is required",
+              })}
+            />
+            {errors.username && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.username.message}
+              </p>
+            )}
+          </div>
 
-      {data && <p className="text-green-400 mt-4">User {data.register.username} registered successfully!</p>}
-      {error && <p className="text-red-400 mt-4">Error: {error.message}</p>}
-      {errorMessage && <p className="text-red-400 mt-4">{errorMessage}</p>}
+          {/* Email Field */}
+          <div>
+            <input
+              type="email"
+              className="w-full p-3 rounded-md border border-gray-300 bg-[#1E293B] text-white"
+              placeholder="Email"
+              {...register("email", {
+                required: "Email is required",
+                pattern: {
+                  value: /^[^@ ]+@[^@ ]+\.[^@ .]{2,}$/,
+                  message: "Invalid email address",
+                },
+              })}
+            />
+            {errors.email && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.email.message}
+              </p>
+            )}
+          </div>
+
+          {/* Password Field */}
+          <div>
+            <input
+              type="password"
+              className="w-full p-3 rounded-md border border-gray-300 bg-[#1E293B] text-white"
+              placeholder="Password"
+              {...register("password", {
+                required: "Password is required",
+                minLength: {
+                  value: 6,
+                  message: "Password must be at least 6 characters long",
+                },
+              })}
+            />
+            {errors.password && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.password.message}
+              </p>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 bg-[#FF7F50] text-white font-bold rounded-md hover:bg-[#FF5722] transition"
+          >
+            {loading ? "Creating Account..." : "Sign Up"}
+          </button>
+        </form>
+
+        {/* Divider */}
+        <div className="my-8 w-full flex items-center">
+          <div className="flex-grow border-t border-gray-600"></div>
+          <span className="text-gray-400 mx-2">Sign up with Others</span>
+          <div className="flex-grow border-t border-gray-600"></div>
+        </div>
+
+        {/* Social Signup */}
+        <div className="w-full max-w-sm space-y-3">
+          <button className="w-full flex items-center justify-center space-x-3 py-3 bg-white rounded-md">
+          <FaGoogle />
+
+            <span className="text-gray-700">Sign up with Google</span>
+          </button>
+          <button className="w-full flex items-center justify-center space-x-3 py-3 bg-[#4267B2] text-white rounded-md">
+          <FaFacebook />
+
+            <span>Sign up with Facebook</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Right Section */}
+      <div className="hidden md:flex flex-1 justify-center items-center bg-[#0F172A]">
+        <img
+          src={img}
+          alt="Illustration"
+          className="max-w-full rounded-xl"
+        />
+      </div>
     </div>
   );
 };
