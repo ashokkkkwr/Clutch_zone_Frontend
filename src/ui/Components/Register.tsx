@@ -126,31 +126,24 @@ const Register: React.FC = () => {
             {loading ? "Creating Account..." : "Sign Up"}
           </button>
         </form>
-
         {/* Divider */}
         <div className="my-8 w-full flex items-center">
           <div className="flex-grow border-t border-gray-600"></div>
           <span className="text-gray-400 mx-2">Sign up with Others</span>
           <div className="flex-grow border-t border-gray-600"></div>
         </div>
-
         {/* Social Signup */}
         <div className="w-full max-w-sm space-y-3">
           <button className="w-full flex items-center justify-center space-x-3 py-3 bg-white rounded-md">
           <FaGoogle />
-
             <span className="text-gray-700">Sign up with Google</span>
           </button>
           <button className="w-full flex items-center justify-center space-x-3 py-3 bg-[#4267B2] text-white rounded-md">
           <FaFacebook />
-
-
-
             <span>Sign up with Facebook</span>
           </button>
         </div>
       </div>
-
       {/* Right Section */}
       <div className="hidden md:flex flex-1 justify-center items-center bg-[#0F172A]">
         <img
@@ -162,5 +155,4 @@ const Register: React.FC = () => {
     </div>
   );
 };
-
 export default Register;

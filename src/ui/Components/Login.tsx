@@ -12,10 +12,13 @@ interface FormData {
 
 const LOGIN_USER = gql`
   mutation Login($email: String!, $password: String!) {
-    login(email: $email, password: $password) {
-      token
-    }
+  login(email: $email, password: $password) {
+    email,
+    role,
+    token,
+    
   }
+}
 `;
 
 const Login: React.FC = () => {
@@ -36,10 +39,18 @@ const Login: React.FC = () => {
           password: formData.password,
         },
       });
+      console.log("🚀 ~ onSubmit ~ response:", response)
       if (response?.data?.login?.token) {
         localStorage.setItem("token", response.data.login.token);
-        navigate("/auth/user/landing");
+        console.log(response.data.login.role, 'role')
+        if(response?.data?.login?.role=="admin") {
+          console.log('admin')
+          navigate("/admin/landing");
+      }else{
+        console.log('user')
+        navigate("/user/home");
       }
+    }
     } catch (err: any) {
       setErrorMessage("Something went wrong. Please try again.");
     }
@@ -85,10 +96,7 @@ const Login: React.FC = () => {
               placeholder="Password"
               {...register("password", {
                 required: "Password is required",
-                minLength: {
-                  value: 6,
-                  message: "Password must be at least 6 characters long",
-                },
+               
               })}
             />
             {errors.password && (
