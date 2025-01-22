@@ -14,6 +14,7 @@ import AddGames from './ui/Components/admin/AddGames'
 import TournamentPage from './ui/Components/admin/TournamentPage'
 import BracketDisplay from './ui/Components/BracketDisplay'
 import Tournament from './ui/Components/user/pages/Tournament'
+import AddTournament from './ui/Components/admin/AddTournament'
 const router = createBrowserRouter([
   {
     path:'/',
@@ -46,6 +47,7 @@ const router = createBrowserRouter([
     children:[
       {path:'landing',element:<AdminLanding />},
       {path:'add-games',element:<AddGames />},
+      {path:'tournament',element:<AddTournament/>}
       // {path:'bracket',element:< TournamentPage/>},
     ]
   }
@@ -55,9 +57,6 @@ function App() {
   return (
 <div>
 <RouterProvider router={router} />
-
-{/* <BracketDisplay /> */}
-
 </div>
     
   )

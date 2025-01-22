@@ -42,7 +42,7 @@ const Login: React.FC = () => {
       console.log("🚀 ~ onSubmit ~ response:", response)
       if (response?.data?.login?.token) {
         localStorage.setItem("token", response.data.login.token);
-        console.log(response.data.login.role, 'role')
+        console.log(response.data.login.token, 'role')
         if(response?.data?.login?.role=="admin") {
           console.log('admin')
           navigate("/admin/landing");
@@ -64,7 +64,6 @@ const Login: React.FC = () => {
         <p className="text-gray-400 mb-10">
           We are glad to see you back with us
         </p>
-
         <form
           onSubmit={handleSubmit(onSubmit)}
           className="w-full max-w-sm space-y-4"
@@ -88,8 +87,7 @@ const Login: React.FC = () => {
             )}
           </div>
 
-          {/* Password Field */}
-          <div>
+s          <div>
             <input
               type="password"
               className="w-full p-3 rounded-md border border-gray-300 bg-[#1E293B] text-white"
@@ -118,7 +116,7 @@ const Login: React.FC = () => {
         {/* Divider */}
         <div className="my-8 w-full flex items-center">
           <div className="flex-grow border-t border-gray-600"></div>
-          <span className="text-gray-400 mx-2">Login with Others</span>
+          <span className="text-gray-400 mx-2">LoguserServicein with Others</span>
           <div className="flex-grow border-t border-gray-600"></div>
         </div>
 

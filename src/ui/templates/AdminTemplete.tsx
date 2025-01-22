@@ -1,12 +1,20 @@
 import React from 'react'
-import AdminNavbar from '../Components/admin/Admin.Navbar'
+import AdminSideNavbar from '../Components/admin/AdminSideNavbar'
+import AdminNavbar from '../Components/admin/AdminNavbar'
 import { Outlet } from 'react-router-dom'
 
 export default function AdminTemplete() {
   return (
     <div>
-        <AdminNavbar />
-        <Outlet />
+
+      <AdminNavbar />
+    <div className='flex'>
+    <AdminSideNavbar />
+    <Outlet />
+    </div>
+     
+   
+        
 
     </div>
   )
