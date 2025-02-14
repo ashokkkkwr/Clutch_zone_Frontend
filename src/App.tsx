@@ -11,10 +11,15 @@ import AdminLanding from './ui/Components/admin/AdminLanding'
 import UserTemplete from './ui/templates/UserTemplete'
 import AdminTemplete from './ui/templates/AdminTemplete'
 import AddGames from './ui/Components/admin/AddGames'
-import TournamentPage from './ui/Components/admin/TournamentPage'
+import TournBracketDisplayamentPage from './ui/Components/admin/TournamentPage'
 import BracketDisplay from './ui/Components/BracketDisplay'
 import Tournament from './ui/Components/user/pages/Tournament'
-import AddTournament from './ui/Components/admin/AddTournament'
+import {AddTournament} from './ui/Components/admin/AddTournament'
+import TournamentDetails from './ui/Components/user/pages/TournamentDetails'
+import AdminTournamentDetails from './ui/Components/admin/AdminTournamentDetails'
+import AdminBracektDisplay from './ui/Components/admin/AdminBracketDisplay'
+import Profile from './ui/Components/user/pages/Profile'
+import UserTeam from './ui/Components/user/pages/UserTeam'
 const router = createBrowserRouter([
   {
     path:'/',
@@ -40,6 +45,11 @@ const router = createBrowserRouter([
     children:[
       {path:'home',element:<Home />},
       {path:'tournament',element:<Tournament />},
+      {path:'tournament-details/:id',element:<TournamentDetails />},
+      {path:'DisplayBracket/:id',element:<BracketDisplay />},
+      {path:'profile',element:<Profile />},
+      {path:'team',element:<UserTeam />}
+ 
     ]
   },{
     path:'/admin',
@@ -47,7 +57,10 @@ const router = createBrowserRouter([
     children:[
       {path:'landing',element:<AdminLanding />},
       {path:'add-games',element:<AddGames />},
-      {path:'tournament',element:<AddTournament/>}
+      {path:'tournament',element:<AddTournament/>},
+      {path:'tournament-details/:id',element:<AdminTournamentDetails />},
+      {path:'DisplayBracket/:id',element:<AdminBracektDisplay />}
+
       // {path:'bracket',element:< TournamentPage/>},
     ]
   }

@@ -55,7 +55,6 @@ const Login: React.FC = () => {
       setErrorMessage("Something went wrong. Please try again.");
     }
   };
-
   return (
     <div className="flex min-h-screen bg-[#0F172A]">
       {/* Left Section */}

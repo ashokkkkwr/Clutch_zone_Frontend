@@ -1,5 +1,9 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { gql, useQuery } from '@apollo/client';
+import TournamentDetails from './pages/TournamentDetails';
+import { useNavigate } from 'react-router-dom';
+
+// Inside HomeTournament
 
 const FETCH_TOURNAMENT = gql`
   query GetTournaments {
@@ -15,9 +19,10 @@ const FETCH_TOURNAMENT = gql`
 `;
 
 export default function HomeTournament() {
+  const navigate = useNavigate();
+
   const { data, loading, error } = useQuery(FETCH_TOURNAMENT);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     if (data) {
       console.log('Fetched tournaments:', data.getTournaments);
@@ -38,8 +43,12 @@ export default function HomeTournament() {
 
   if (loading) return <div className="text-center mt-20">Loading tournaments...</div>;
   if (error) return <div className="text-center mt-20 text-red-500">Error: {error.message}</div>;
+  
+
 
   return (
+    <>
+    
     <div className="h-full bg-black text-white py-10">
       <div className="container mx-auto px-4">
         {/* Section Title */}
@@ -62,7 +71,8 @@ export default function HomeTournament() {
               <div
                 key={tournament.id}
                 className="shrink-0 w-80 bg-gray-900 rounded-lg shadow-lg overflow-hidden border-2 border-pink-500"
-              >
+                onClick={() => navigate(`/user/tournament-details/${tournament.id}`)} // Navigate to TournamentDetails page
+                >
                 {/* Image */}
                 <img
                   src={tournament.tournament_cover}
@@ -81,14 +91,14 @@ export default function HomeTournament() {
                     <span className="text-white font-medium">{tournament.tournament_registration_start_date}</span>
                   </p>
                   {/* Register Button */}
-                  <button className="w-full bg-pink-500 text-white py-2 rounded-full hover:bg-pink-600 transition">
+                  <button className="w-full bg-pink-500 text-white py-2 rounded-full hover:bg-pink-600 transition"
+                  onClick={()=>console.log('first')}>
                     Register Now
                   </button>
                 </div>
               </div>
             ))}
           </div>
-
           {/* Scroll Buttons */}
           <button
             onClick={scrollLeft}
@@ -107,5 +117,6 @@ export default function HomeTournament() {
         </div>
       </div>
     </div>
+    </>
   );
 }
