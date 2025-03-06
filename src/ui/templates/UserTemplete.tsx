@@ -1,5 +1,6 @@
 import { Outlet } from "react-router-dom";
-import UserNavbar from "../Components/user/UserNavbar";
+import UserNavbar from "../Components/user/component/UserNavbar";
+import UserFooter from "../Components/user/component/UserFooter";
 
 const UserTemplete = () => {
   
@@ -8,6 +9,7 @@ const UserTemplete = () => {
         <UserNavbar />
 
             <Outlet />
+            <UserFooter />
         </>
     )
 }

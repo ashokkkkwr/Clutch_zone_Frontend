@@ -1,120 +1,29 @@
-import React, { useEffect } from 'react';
-import { Users, Layout, UserPlus } from 'lucide-react';
-import { gql, useMutation, useQuery } from '@apollo/client';
-
-// --- TypeScript Interfaces ---
-
-interface Squad {
-  id: string;
-  name: string;
-  imageUrl: string;
-  members: number;
-}
-
-interface Team {
-  id: string;
-  logo: string;
-  team_name: string;
-  slug: string;
-  Member: Array<{
-    id: string;
-    username: string;
-    email: string;
-    role: string;
-  }>;
-  team_leader: {
-    id: string;
-    username: string;
-    email: string;
-    role: string;
-  };
-}
-
-interface TeamDetails {
-  id: string;
-  logo: string;
-  max_players: number;
-  slug: string;
-  team_name: string;
-  tournaments_played: number;
-  wins: number;
-  team_players: Array<{
-    user: {
-      id: string;
-      username: string;
-      email: string;
-    };
-  }>;
-}
-
-interface JoinRequest {
-  id: string;
-  status: string;
-  user: {
-    id: string;
-    username: string;
-    email: string;
-  };
-}
-
-// --- GraphQL Queries and Mutation ---
-
-const FETCH_REQUESTS_TO_JOIN = gql`
-  query GetPendingRequests {
-    getPendingRequests {
-      id
-      status
-      user {
-        id
-        username
-        email
-      }
-    }
-  }
-`;
-
+import React, { useRef, useState } from 'react';
+import { useQuery, gql, useMutation } from '@apollo/client';
+import { Trophy, Users, Image as ImageIcon, ChevronDown, Loader2 } from 'lucide-react';
+import Media from '../component/Media';
+import Overview from '../component/Overview';
 const GET_OWN_TEAM_DETAILS = gql`
   query GetOwnTeamDetails {
-    getOwnTeamDetails {
-      id
-      logo
-      max_players
-      slug
-      team_name
-      tournaments_played
-      wins
-      team_players {
-        user {
-          id
-          username
-          email
-        }
+  getOwnTeamDetails {
+    id
+    team_name
+    logo
+    max_players
+    description
+    wins
+    tournaments_played
+    teamPlayers {
+      role
+      user {
+        email
+        id
+        
+        username
       }
     }
   }
-`;
-
-const FETCH_TEAM = gql`
-  query GetTeams {
-    getTeams {
-      id
-      logo
-      Member {
-        id
-        username
-        email
-        role
-      }
-      slug
-      team_leader {
-        id
-        username
-        email
-        role
-      }
-      team_name
-    }
-  }
+}
 `;
 
 const JOIN_TEAM = gql`
@@ -126,314 +35,169 @@ const JOIN_TEAM = gql`
     }
   }
 `;
-const ACCEPT_REQUEST=gql`
-mutation AcceptRequest($requestId: ID!) {
-  acceptRequest(requestId: $requestId)
-}
-`
-const REJECT_REQUEST=gql`
-mutation RejectRequest($requestId: ID!) {
-  rejectRequest(requestId: $requestId)
-}
-`
 
-// --- Static Squads Data (Optional) ---
-const squads: Squad[] = [
-  {
-    id: '1',
-    name: 'Suicide Squad',
-    imageUrl:
-      'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=500&auto=format&fit=crop&q=60',
-    members: 24,
-  },
-  {
-    id: '2',
-    name: 'STORM',
-    imageUrl:
-      'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=500&auto=format&fit=crop&q=60',
-    members: 18,
-  },
-  {
-    id: '3',
-    name: 'Chill',
-    imageUrl:
-      'https://images.unsplash.com/photo-1534423861386-85a16f5d13fd?w=500&auto=format&fit=crop&q=60',
-    members: 32,
-  },
-  {
-    id: '4',
-    name: 'STORM',
-    imageUrl:
-      'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=500&auto=format&fit=crop&q=60',
-    members: 18,
-  },
-];
-
-// --- Main Component ---
-
-const UserTeam: React.FC = () => {
-  // Get token from localStorage
+export default function UserTeam() {
   const token = localStorage.getItem('token');
+  const authHeaders = { Authorization: `Bearer ${token}` };
+  const [sendJoinRequest] = useMutation(JOIN_TEAM);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [activeSection, setActiveSection] = useState<'overview' | 'media' | 'players'>('overview');
 
   if (!token) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white p-8">
-        <p>Please login to view your team details.</p>
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white p-8 flex items-center justify-center">
+        <div className="text-center space-y-4 animate-fade-in">
+          <h2 className="text-2xl font-bold text-red-400">Authentication Required</h2>
+          <p className="text-gray-400">Please login to view your team details.</p>
+          <button className="px-6 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors duration-300">
+            Login Now
+          </button>
+        </div>
       </div>
     );
   }
 
-  const authHeaders = { Authorization: `Bearer ${token}` };
-
-  // Query: List of teams available to join
-  const {
-    data: teamsData,
-    loading: teamsLoading,
-    error: teamsError,
-  } = useQuery<{ getTeams: Team[] }>(FETCH_TEAM, {
-    context: { headers: authHeaders },
+  const { data, loading,error } = useQuery(GET_OWN_TEAM_DETAILS, {
+    context: { headers: { Authorization: `Bearer ${token}` } },
   });
 
-  // Query: Logged-in user's own team details
-  const {
-    data: teamDetailsData,
-    loading: teamDetailsLoading,
-    error: teamDetailsError,
-  } = useQuery<{ getOwnTeamDetails: TeamDetails | null }>(GET_OWN_TEAM_DETAILS, {
-    context: { headers: authHeaders },
-  });
-
-  // Query: Pending join requests for the team
-  const {
-    data: joinRequestsData,
-    loading: joinRequestsLoading,
-    error: joinRequestsError,
-  } = useQuery<{ getPendingRequests: JoinRequest[] }>(FETCH_REQUESTS_TO_JOIN, {
-    context: { headers: authHeaders },
-  });
-
-  // Mutation: Send join request to a team
-  const [sendJoinRequest] = useMutation(JOIN_TEAM);
-
-  const handleJoinTeam = async (teamId: string) => {
-    try {
-      const { data } = await sendJoinRequest({
-        variables: { teamId },
-        context: { headers: authHeaders },
-      });
-      console.log('Join request sent:', data);
-      // Optionally, trigger a refetch or update local state here
-    } catch (error) {
-      console.error('Error sending join request:', error);
-    }
+  const handleSectionChange = (section: 'overview' | 'media' | 'players') => {
+    setActiveSection(section);
+    contentRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Log any errors to the console (internal errors are not shown in the UI)
-  useEffect(() => {
-    if (teamsError) {
-      console.error('Error fetching teams:', teamsError);
-    }
-    if (teamDetailsError) {
-      console.error('Error fetching team details:', teamDetailsError);
-    }
-    if (joinRequestsError) {
-      console.error('Error fetching join requests:', joinRequestsError);
-    }
-  }, [teamsError, teamDetailsError, joinRequestsError]);
-
-  const [AcceptRequest] = useMutation(ACCEPT_REQUEST);
-  // const handleJoinTeam = async (teamId: string) => {
-  //   try {
-  //     const { data } = await sendJoinRequest({
-  //       variables: { teamId },
-  //       context: { headers: authHeaders },
-  //     });
-  //     console.log('Join request sent:', data);
-  //     // Optionally, trigger a refetch or update local state here
-  //   } catch (error) {
-  //     console.error('Error sending join request:', error);
-  //   }
-  // };
-
-
-  const acceptRequest = async(requestId:string)=>{
-  console.log("🚀 ~ acceptRequest ~ requestId:", requestId)
-  try{
-    await AcceptRequest({
-      variables:{requestId},
-              context: { headers: authHeaders },
-
-    })
-  }catch(error){
-console.error('error during accepting the request',error)
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white flex items-center justify-center">
+        <div className="flex items-center gap-3">
+          <Loader2 className="w-6 h-6 animate-spin text-purple-500" />
+          <p className="text-lg">Loading team details...</p>
+        </div>
+      </div>
+    );
+  }
+  if(error){
+    console.log("🚀 ~ UserTeam ~ error:", error)
+    
   }
 
-  }
-  const rejectRequest = async(requestId:string)=>{
-  console.log("🚀 ~ rejectRequest ~ requestId:", requestId)
+  const team = data?.getOwnTeamDetails;
 
-  }
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-8">
-      {/* ---------------- Your Team Section ---------------- */}
-      <section className="mb-12">
-        <div className="flex justify-between items-center mb-4">
-          <div>
-            <h2 className="text-lg font-bold mb-1">YOUR TEAM</h2>
-            {teamDetailsLoading ? (
-              <p>Loading team details...</p>
-            ) : teamDetailsData && teamDetailsData.getOwnTeamDetails ? (
-              <div className="mt-2">
-                <img
-                  src={teamDetailsData.getOwnTeamDetails.logo || 'https://via.placeholder.com/150'}
-                  alt={teamDetailsData.getOwnTeamDetails.team_name}
-                  className="w-24 h-24 rounded-full mb-2"
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black">
+      {/* Hero Section */}
+      <div className="relative h-[80vh] w-full overflow-hidden">
+        <img 
+          src="https://images.unsplash.com/photo-1542751371-adc38448a05e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" 
+          alt="Esports Team" 
+          className="h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/60 to-gray-900"></div>
+        
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white px-6">
+          {team ? (
+            <div className="space-y-6 animate-fade-in">
+              {team.logo && (
+                <img 
+                  src={team.logo} 
+                  alt="Team Logo" 
+                  className="w-32 h-32 rounded-full border-4 border-purple-500 shadow-lg shadow-purple-500/50"
                 />
-                <p className="text-xl font-semibold">
-                  {teamDetailsData.getOwnTeamDetails.team_name}
-                </p>
-                <p className="text-sm text-gray-400">
-                  Players: {teamDetailsData.getOwnTeamDetails.team_players.length} /{' '}
-                  {teamDetailsData.getOwnTeamDetails.max_players}
-                </p>
-              </div>
-            ) : (
-              <p className="text-sm text-gray-400">You haven't joined a team yet.</p>
-            )}
-          </div>
-          <button className="flex items-center space-x-2 px-4 py-2 border border-orange-500 rounded-md text-orange-500 hover:bg-orange-500 hover:text-white transition-colors">
-            <UserPlus className="w-4 h-4" />
-            <span>Create +</span>
-          </button>
-        </div>
-      </section>
-
-      {/* ---------------- Top Teams Section ---------------- */}
-      <section className="mb-12">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h2 className="text-lg font-bold mb-1">TOP TEAMS</h2>
-            <p className="text-sm text-gray-400">Interesting teams to join</p>
-          </div>
-          <button className="text-orange-500 hover:text-orange-400">View All</button>
-        </div>
-        {teamsLoading ? (
-          <p>Loading teams...</p>
-        ) : teamsError ? (
-          <p>Something went wrong while loading teams.</p>
-        ) : teamsData && teamsData.getTeams && teamsData.getTeams.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {teamsData.getTeams.map((team) => (
-              <div
-                key={team.id}
-                className="bg-gray-800 rounded-lg overflow-hidden group hover:ring-2 hover:ring-orange-500 transition-all"
-              >
-                <div className="h-48 overflow-hidden">
-                  <img
-                    src={team.logo || 'https://via.placeholder.com/300'}
-                    alt={team.team_name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                  />
-                </div>
-                <div className="p-4">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-bold">{team.team_name}</h3>
-                  </div>
-                  <button
-                    onClick={() => handleJoinTeam(team.id)}
-                    className="w-full py-2 bg-orange-500 rounded-md hover:bg-orange-600 transition-colors"
-                  >
-                    Join Now
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p>No teams available to join at the moment.</p>
-        )}
-      </section>
-
-      {/* ---------------- Team Join Requests Section ---------------- */}
-      <section className="mb-12">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h2 className="text-lg font-bold mb-1">TEAM JOIN REQUESTS</h2>
-            <p className="text-sm text-gray-400">Requests to join your team</p>
-          </div>
-        </div>
-        {joinRequestsLoading ? (
-          <p>Loading join requests...</p>
-        ) : joinRequestsError ? (
-          <p>Something went wrong while loading join requests.</p>
-        ) : joinRequestsData &&
-          joinRequestsData.getPendingRequests &&
-          joinRequestsData.getPendingRequests.length > 0 ? (
-          <div className="space-y-4">
-            {joinRequestsData.getPendingRequests.map((request) => (
-              <div key={request.id} className="bg-gray-800 p-4 rounded-md">
-                <p>
-                  <strong>User:</strong> {request.user.username}
-                </p>
-                <p>
-                  <strong>Email:</strong> {request.user.email}
-                </p>
-                <p>
-                  <strong>Status:</strong> {request.status}
-                </p>
-                <button onClick={()=>acceptRequest(request.id)}>
-                  Accept
+              )}
+              <h1 className="text-5xl md:text-7xl font-extrabold uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
+                {team.team_name}
+              </h1>
+              <p className="mt-4 text-lg md:text-2xl max-w-2xl text-gray-300">
+                {team.description || 'No description available.'}
+              </p>
+              <div className="flex gap-4 justify-center">
+                <button className="px-8 py-3 bg-purple-600 hover:bg-purple-700 text-lg font-bold rounded-lg transition-all duration-300 flex items-center gap-2 group">
+                  <Users className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                  Join The Squad
                 </button>
-                <button onClick={()=>rejectRequest(request.id)}>
-                  Reject
-                </button>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p>No pending join requests.</p>
-        )}
-      </section>
-
-      {/* ---------------- Optional: Static Squads Section ---------------- */}
-      <section>
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h2 className="text-lg font-bold mb-1">STATIC SQUADS</h2>
-            <p className="text-sm text-gray-400">Some static squads for reference</p>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {squads.map((squad) => (
-            <div
-              key={squad.id}
-              className="bg-gray-800 rounded-lg overflow-hidden group hover:ring-2 hover:ring-orange-500 transition-all"
-            >
-              <div className="h-48 overflow-hidden">
-                <img
-                  src={squad.imageUrl}
-                  alt={squad.name}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                />
-              </div>
-              <div className="p-4">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-bold">{squad.name}</h3>
-                  <div className="flex items-center text-gray-400 text-sm">
-                    <Users className="w-4 h-4 mr-1" />
-                    <span>{squad.members}</span>
-                  </div>
-                </div>
-                <button className="w-full py-2 bg-orange-500 rounded-md hover:bg-orange-600 transition-colors">
-                  Join Now
+                <button className="px-8 py-3 bg-gray-800/50 hover:bg-gray-800 text-lg font-bold rounded-lg border border-gray-700 transition-all duration-300 flex items-center gap-2">
+                  View Roster
                 </button>
               </div>
             </div>
-          ))}
+          ) : (
+            <div className="space-y-6 animate-fade-in">
+              <div className="w-32 h-32 rounded-full border-4 border-gray-700 flex items-center justify-center">
+                <Users className="w-16 h-16 text-gray-600" />
+              </div>
+              <h1 className="text-4xl md:text-6xl font-extrabold uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-gray-500 to-gray-300">
+                No Team Found
+              </h1>
+              <p className="mt-4 text-lg md:text-2xl max-w-2xl text-gray-400">
+                Discover and join top teams to start competing!
+              </p>
+              <button className="px-8 py-3 bg-purple-600 hover:bg-purple-700 text-lg font-bold rounded-lg transition-all duration-300 flex items-center gap-2 group">
+                <Trophy className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                Browse Teams
+              </button>
+            </div>
+          )}
         </div>
-      </section>
+        
+        <div className="absolute bottom-0 left-0 right-0 flex justify-center pb-8">
+          <ChevronDown className="w-8 h-8 text-white animate-bounce" />
+        </div>
+      </div>
+
+      {/* Navigation Tabs */}
+      <div className="sticky top-0 bg-gray-900/95 backdrop-blur-sm border-b border-gray-800 z-50">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex justify-center items-center p-4 gap-8">
+            <button
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 ${
+                activeSection === 'overview' 
+                  ? 'bg-purple-600 text-white' 
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+              }`}
+              onClick={() => handleSectionChange('overview')}
+            >
+              <Trophy className="w-5 h-5" />
+              <span className="font-medium">Overview</span>
+            </button>
+            <button
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 ${
+                activeSection === 'media' 
+                  ? 'bg-purple-600 text-white' 
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+              }`}
+              onClick={() => handleSectionChange('media')}
+            >
+              <ImageIcon className="w-5 h-5" />
+              <span className="font-medium">Media</span>
+            </button>
+            <button
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 ${
+                activeSection === 'players' 
+                  ? 'bg-purple-600 text-white' 
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+              }`}
+              onClick={() => handleSectionChange('players')}
+            >
+              <Users className="w-5 h-5" />
+              <span className="font-medium">Players</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Content Section */}
+      <div ref={contentRef} className="max-w-7xl mx-auto p-8">
+        <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-6">
+          {activeSection === 'overview' && <Overview />}
+          {activeSection === 'media' && <Media />}
+          {activeSection === 'players' && (
+            <div className="text-center py-12">
+              <Users className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+              <p className="text-gray-400 text-lg">Players roster coming soon...</p>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
-};
-
-export default UserTeam;
+}

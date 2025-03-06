@@ -103,6 +103,24 @@ export const AddTournament: React.FC = () => {
     reset,
     formState: { errors },
   } = useForm<FormTournament>();
+  const [prizePools, setPrizePools] = useState<{ prize: string; placements: string }[]>([]);
+    // Function to add a new prize pool
+    const addPrizePool = () => {
+      setPrizePools([...prizePools, { prize: "", placements: "" }]);
+    };
+  
+    // Function to remove a prize pool
+    const removePrizePool = (index: number) => {
+      setPrizePools(prizePools.filter((_, i) => i !== index));
+    };
+  
+    // Function to update prize pool values dynamically
+    const updatePrizePool = (index: number, field: "prize" | "placements", value: string) => {
+      const updatedPools = [...prizePools];
+      updatedPools[index][field] = value;
+      setPrizePools(updatedPools);
+    };
+  
 
   const onSubmit = async (formData: FormTournament) => {
     const submitData = new FormData();
@@ -129,7 +147,7 @@ export const AddTournament: React.FC = () => {
     );
     submitData.append("total_player", formData.total_player);
     submitData.append("games_id", selectedGameId || ""); // Ensure `selectedGameId` is set
-
+    submitData.append("prizePools", JSON.stringify(prizePools));
     if (formData.tournament_cover?.[0]) {
       submitData.append("tournament_cover", formData.tournament_cover[0]);
     }
@@ -417,6 +435,32 @@ export const AddTournament: React.FC = () => {
                     </span>
                   )}
                 </div>
+                 {/* Prize Pools Section */}
+          <div className="bg-gray-800 p-4 rounded-lg">
+            <h3 className="text-lg font-bold">Prize Pools</h3>
+            {prizePools.map((pool, index) => (
+              <div key={index} className="flex items-center gap-2 mt-2">
+                <input 
+                  type="text"
+                  value={pool.prize}
+                  onChange={(e) => updatePrizePool(index, "prize", e.target.value)}
+                  placeholder="Prize Amount"
+                  className="w-1/2 p-2 rounded bg-gray-700 text-white"
+                />
+                <input 
+                  type="text"
+                  value={pool.placements}
+                  onChange={(e) => updatePrizePool(index, "placements", e.target.value)}
+                  placeholder="Placement"
+                  className="w-1/3 p-2 rounded bg-gray-700 text-white"
+                />
+                <button type="button" onClick={() => removePrizePool(index)} className="text-red-500"><X size={20} /></button>
+              </div>
+            ))}
+            <button type="button" onClick={addPrizePool} className="mt-2 flex items-center text-green-500">
+              <Plus size={18} /> Add Prize Pool
+            </button>
+          </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     Game Mode
@@ -481,6 +525,8 @@ export const AddTournament: React.FC = () => {
                     type="datetime-local"
                     {...register("tournament_registration_start_date", {
                       required: "This field is required",
+                      setValueAs: (value) =>
+                        value ? new Date(value).toISOString() : "",
                     })}
                     className="w-full bg-gray-800 text-white p-2 rounded"
                   />
@@ -490,6 +536,7 @@ export const AddTournament: React.FC = () => {
                     </span>
                   )}
                 </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     Registration End Date

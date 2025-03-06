@@ -3,7 +3,28 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { gql, useQuery, useMutation } from "@apollo/client";
 import { useNavigate } from "react-router-dom";
+import CryptoJS from "crypto-js";
+import { v4 as uuidv4 } from "uuid";
 
+
+const INITIATE_ESEWA_PAYMENT = gql`
+  mutation InitiateEsewaPayment($tournamentId: ID!) {
+    initiateEsewaPayment(tournamentId: $tournamentId) {
+      paymentUrl
+      params {
+        amount
+        tax_amount
+        total_amount
+        transaction_uuid
+        product_code
+        success_url
+        failure_url
+        signed_field_names
+        signature
+      }
+    }
+  }
+`;
 // GraphQL Queries and Mutations
 const FETCH_TOURNAMENT = gql`
   query GetTournament($getTournamentId: ID!) {
@@ -48,6 +69,7 @@ export default function TournamentDetails() {
   });
 
   const [registerTournament] = useMutation(REGISTER_TOURNAMENT);
+  const [initiateEsewaPayment] = useMutation(INITIATE_ESEWA_PAYMENT)
 
   useEffect(() => {
     if (data) {
@@ -55,6 +77,74 @@ export default function TournamentDetails() {
     }
   }, [data]);
 
+  // const handleRegistration = async () => {
+  //   const token = localStorage.getItem("token");
+  //   if (!token) {
+  //     setErrorMessage("Please login to register");
+  //     console.error("User token is missing!");
+  //     return;
+  //   }
+  //   console.log("first", id);
+
+  //   try {
+  //     // const response = await registerTournament({
+  //     //   variables: { registerTournamentId: id },
+  //     //   context: {
+  //     //     headers: {
+  //     //       Authorization: `Bearer ${token}`,
+  //     //     },
+  //     //   },
+  //     // });
+  //     // console.log("Registration successful:", response.data);
+  //     // setErrorMessage(""); // Clear any previous errors
+  //     if(tournament.tournament_entry_fee>0){
+  //       // console.log('first')
+  //       // const {data} = await initiateEsewaPayment({
+  //       //     variables:{tournamentId:id},
+  //       //     context:{
+  //       //       headers:{
+  //       //         Authorization:`Bearer ${token}`
+  //       //       }
+  //       //     }
+  //       // })
+  //       // console.log("🚀 ~ handleRegistration ~ data:", data)
+  //       // console.log('ya?')
+  //       // const form = document.createElement("form");
+  //       // form.method = "POST";
+  //       // form.action = data.initiateEsewaPayment.paymentUrl;
+        
+  //       // Object.entries(data.initiateEsewaPayment.params).forEach(([key, value]) => {
+  //       //   console.log("🚀 ~ Object.entries ~ data.initiateEsewaPayment.params:", data.initiateEsewaPayment.params.si)
+  //       //   const input = document.createElement("input");
+  //       //   input.type = "hidden";
+  //       //   input.name = key;
+  //       //   input.value = String(value); // Convert value to string
+  //       //   form.appendChild(input);
+  //       // });
+        
+  //       // document.body.appendChild(form);
+  //       // form.submit();
+  //     }else{
+  //        // Free registration
+  //     await registerTournament({
+  //       variables: { registerTournamentId: id },
+  //       context: {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       },
+  //     });
+  //   }
+      
+  // } catch (err: unknown) {
+  //   if (err instanceof Error) {
+  //     console.error("Error during registration:", err);
+  //     setErrorMessage(err.message || "An error occurred during registration.");
+  //   } else {
+  //     console.error("Unknown error during registration:", err);
+  //     setErrorMessage("An unknown error occurred during registration.");
+  //   }
+  // }}
   const handleRegistration = async () => {
     const token = localStorage.getItem("token");
    

@@ -6,25 +6,24 @@ import axios from "axios";
 
 const FETCH_TEAM = gql`
   query GetTeams {
-    getTeams {
-      id
-      logo
-      Member {
-        email
+  getTeams {
+    id
+    team_name
+    description
+    logo
+    maxPlayers
+    
+  
+    teamPlayers {
+      role
+      user {
         id
-        role
         username
-      }
-      slug
-      team_leader {
         email
-        id
-        role
-        username
       }
-      team_name
     }
   }
+}
 `;
 const JOIN_TEAM = gql`
   mutation SendJoinRequest($teamId: ID!) {
@@ -38,6 +37,9 @@ const JOIN_TEAM = gql`
 
 export default function HomeTeam() {
   const { data, loading, error } = useQuery(FETCH_TEAM);
+  if(error){
+    console.log(error,'teamn ko errror')
+  }
   const {
     register,
     handleSubmit,
@@ -110,9 +112,11 @@ export default function HomeTeam() {
   return (
     <div className="min-h-screen bg-[#001219] text-white p-8">
       {/* Header Section */}
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold mb-4">#GameForGood</h1>
-        <p className="text-gray-300 mb-8">
+      <div className="px-28 mx-auto">
+   
+
+        <h1 className="text-[24px] font-bold italic tracking-[0%] leading-auto font-[Poppins] mb-4 ">#GameForGood</h1>
+        <p className="text-gray-300 text-[16px]  tracking-[0%] leading-auto font-[Poppins]  mb-8">
           Win in our tournaments or be part of play as you go to earn money and
           help those in need{" "}
           <a href="#" className="text-orange-500 hover:text-orange-400">
@@ -125,7 +129,7 @@ export default function HomeTeam() {
           {/* Tournaments */}
           <div className="bg-[#1a1a2e] rounded-xl p-6 hover:bg-[#1a1a2e]/80 transition">
             <Trophy className="w-12 h-12 text-emerald-400 mb-4" />
-            <h2 className="text-xl font-bold mb-2">Tournaments</h2>
+            <h2 className="text-[16px]  tracking-[0%] leading-auto font-[Poppins] mb-2 text-emerald-400">Tournaments</h2>
             <p className="text-gray-400 text-sm mb-4">
               Compete in any of our weekly tournaments. If you win, you can
               donate a portion of your prize to a charity of your choice.
@@ -138,7 +142,7 @@ export default function HomeTeam() {
           {/* Play As You Go */}
           <div className="bg-[#1a1a2e] rounded-xl p-6 hover:bg-[#1a1a2e]/80 transition">
             <Clock className="w-12 h-12 text-cyan-400 mb-4" />
-            <h2 className="text-xl font-bold mb-2">Play As You Go</h2>
+            <h2 className="text-[16px]  tracking-[0%] leading-auto font-[Poppins] mb-2 text-cyan-400">Play As You Go</h2>
             <p className="text-gray-400 text-sm mb-4">
               Compete anywhere anytime against random players. If you lose the
               match, you can pledge to donate to a charity of your choice.
@@ -151,7 +155,7 @@ export default function HomeTeam() {
           {/* Challenge */}
           <div className="bg-[#1a1a2e] rounded-xl p-6 hover:bg-[#1a1a2e]/80 transition">
             <HandMetal className="w-12 h-12 text-yellow-400 mb-4" />
-            <h2 className="text-xl font-bold mb-2">Challenge</h2>
+            <h2 className="text-[16px]  tracking-[0%] leading-auto font-[Poppins] mb-2 text-yellow-400">Challenge</h2>
             <p className="text-gray-400 text-sm mb-4">
               Click 'Challenge' on any player's profile. If you lose the match,
               you can pledge to donate to a charity of your choice.
@@ -169,7 +173,7 @@ export default function HomeTeam() {
             {data?.getTeams?.map((team: any, index: any) => (
               <div
                 key={index}
-                className="bg-[#1a1a2e] rounded-xl overflow-hidden p-4"
+                className="bg-[#1a1a2e] rounded-xl overflow-hidden "
               >
                 <img
                   src={team.logo}
@@ -177,10 +181,11 @@ export default function HomeTeam() {
                   className="w-full h-40 object-cover"
                 />
                 <h3 className="font-bold mt-2">{team.team_name}</h3>
-                <p className="text-gray-400 text-sm">
-                  Members:{" "}
-                  {(team.team_leader ? 1 : 0) + (team.Member?.length || 0)}
-                </p>
+                <p className="text-sm text-gray-400">
+                    {team.teamPlayers
+                      ? `${team.teamPlayers.length} Members`
+                      : "No members"}
+                  </p>
                 <button onClick={() => joinTeam(team.id)}>join team</button>
               </div>
             ))}

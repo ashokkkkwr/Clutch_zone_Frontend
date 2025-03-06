@@ -20,6 +20,10 @@ import AdminTournamentDetails from './ui/Components/admin/AdminTournamentDetails
 import AdminBracektDisplay from './ui/Components/admin/AdminBracketDisplay'
 import Profile from './ui/Components/user/pages/Profile'
 import UserTeam from './ui/Components/user/pages/UserTeam'
+import ClutchBucks from './ui/Components/user/pages/ClutchBucks'
+import PaymentSuccess from './ui/Components/user/pages/PaymentSuccess'
+import ErrorPage from './ErrorPage'
+import AddGears from './ui/Components/admin/AddGears'
 const router = createBrowserRouter([
   {
     path:'/',
@@ -28,10 +32,14 @@ const router = createBrowserRouter([
         <LandingPageTemplate />
       </ProtectedRoute>
     ),
+    errorElement: <ErrorPage />, // Set custom error page
+
     children:[{index:true,element:<Home />}]
   },{
     path:'/auth',
     element:<AuthTemplete />,
+    errorElement: <ErrorPage />, // Set custom error page
+
     children:[
       {path:'user/register',element:<Register />},
       {path:'user/otp',element:<VerifyOtp />},
@@ -42,24 +50,32 @@ const router = createBrowserRouter([
   },{
     path:'/user',
     element:<UserTemplete />,
+    errorElement: <ErrorPage />, // Set custom error page
+
     children:[
       {path:'home',element:<Home />},
       {path:'tournament',element:<Tournament />},
       {path:'tournament-details/:id',element:<TournamentDetails />},
       {path:'DisplayBracket/:id',element:<BracketDisplay />},
       {path:'profile',element:<Profile />},
-      {path:'team',element:<UserTeam />}
+      {path:'team',element:<UserTeam />},
+      {path:'Cbucks',element:<ClutchBucks />},
+      {path:'paymentsuccess',element:<PaymentSuccess />}
  
     ]
   },{
     path:'/admin',
     element:<AdminTemplete />,
+    errorElement: <ErrorPage />, // Set custom error page
+
     children:[
       {path:'landing',element:<AdminLanding />},
       {path:'add-games',element:<AddGames />},
+      {path:'add-gears',element:<AddGears />},
       {path:'tournament',element:<AddTournament/>},
       {path:'tournament-details/:id',element:<AdminTournamentDetails />},
-      {path:'DisplayBracket/:id',element:<AdminBracektDisplay />}
+      {path:'DisplayBracket/:id',element:<AdminBracektDisplay />},
+
 
       // {path:'bracket',element:< TournamentPage/>},
     ]

@@ -60,7 +60,7 @@ const Login: React.FC = () => {
       {/* Left Section */}
       <div className="flex-1 flex flex-col justify-center items-center px-8">
         <h1 className="text-5xl font-bold text-white mb-6">Welcome</h1>
-        <p className="text-gray-400 mb-10">
+        <p className="text-gray-400 mb-10">s
           We are glad to see you back with us
         </p>
         <form
@@ -85,8 +85,7 @@ const Login: React.FC = () => {
               <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
             )}
           </div>
-
-s          <div>
+        <div>
             <input
               type="password"
               className="w-full p-3 rounded-md border border-gray-300 bg-[#1E293B] text-white"

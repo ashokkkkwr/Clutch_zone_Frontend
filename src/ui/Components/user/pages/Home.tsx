@@ -1,13 +1,15 @@
 import React from 'react'
-import HomeHero from '../HomeHero'
-import HomeTournament from '../HomeTournament'
-import HomeTeam from '../HomeTeam'
+import HomeHero from '../component/HomeHero'
+import HomeTournament from '../component/HomeTournament'
+import HomeTeam from '../component/HomeTeam'
+import TournamentHighlight from '../component/TournamentHighlight'
 export default function Home() {
   return (
     <div>
       <HomeHero />
       <HomeTournament />
       <HomeTeam />
+      <TournamentHighlight />
     </div>
     
   )
