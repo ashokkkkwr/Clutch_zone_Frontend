@@ -24,6 +24,7 @@ import ClutchBucks from './ui/Components/user/pages/ClutchBucks'
 import PaymentSuccess from './ui/Components/user/pages/PaymentSuccess'
 import ErrorPage from './ErrorPage'
 import AddGears from './ui/Components/admin/AddGears'
+import { SocketProvider } from './context/SocketContext'
 const router = createBrowserRouter([
   {
     path:'/',
@@ -84,8 +85,12 @@ const router = createBrowserRouter([
 function App() {
 
   return (
+  
 <div>
+<SocketProvider>
 <RouterProvider router={router} />
+</SocketProvider>
+
 </div>
     
   )
