@@ -3,12 +3,13 @@ import { Trophy, Users, Image as ImageIcon, ChevronDown, Loader2 } from 'lucide-
 import UpcommingTournament from '../component/UpcommingTournament';
 import OngoingTournament from '../component/OngoingTournament';
 import PastTournament from '../component/PastTournament';
+import MyTournament from '../component/MyTournament';
 
 export default function Tournament() {
   const token = localStorage.getItem('token');
   const authHeaders={Authorization:`Bearer ${token}`};
   const contentRef= useRef<HTMLDivElement>(null);
-  const [activeSection,setActiveSection]=useState<'upcomming'|'ongoing'|'past'>('upcomming');
+  const [activeSection,setActiveSection]=useState<'upcomming'|'ongoing'|'past'|'myTournament'>('upcomming');
   if (!token) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white p-8 flex items-center justify-center">
@@ -22,7 +23,7 @@ export default function Tournament() {
       </div>
     );
   }
-  const handleSectionChange=(section:'upcomming'|'ongoing'|'past')=>{
+  const handleSectionChange=(section:'myTournament'|'upcomming'|'ongoing'|'past')=>{
     setActiveSection(section);
     contentRef.current?.scrollIntoView({behavior:'smooth'});
   }
@@ -78,6 +79,17 @@ export default function Tournament() {
        <div className="sticky top-0 bg-gray-900/95 backdrop-blur-sm border-b border-gray-800 z-50">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-center items-center p-4 gap-8">
+          <button
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 ${
+                activeSection === 'myTournament' 
+                  ? 'bg-purple-600 text-white' 
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+              }`}
+              onClick={() => handleSectionChange('myTournament')}
+            >
+              <Trophy className="w-5 h-5" />
+              <span className="font-medium">My Tournament</span>
+            </button>
             <button
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 ${
                 activeSection === 'upcomming' 
@@ -117,11 +129,10 @@ export default function Tournament() {
        {/* Content Section */}
        <div ref={contentRef} className="max-w-[180vh] mx-auto p-8">
         <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-6">
+        {activeSection === 'myTournament' && <MyTournament />}
           {activeSection === 'upcomming' && <UpcommingTournament />}
           {activeSection === 'ongoing' && <OngoingTournament />}
-          {activeSection === 'past' && (
-            <PastTournament />
-          )}
+          {activeSection === 'past' && (<PastTournament /> )}
         </div>
       </div>
     </div>

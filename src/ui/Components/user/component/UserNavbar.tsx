@@ -51,6 +51,11 @@ export default function UserNavbar() {
               <Wallet className="w-4 h-4" />
               <span>CBucks</span>
             </NavLink>
+            <NavLink to="/user/user-matches" className={({ isActive }) => (isActive ? activeLinkClass : defaultLinkClass)}>
+              <Users className="w-4 h-4" />
+              <span>Matches</span>
+            </NavLink>
+            
           </div>
 
           {/* User Dropdown */}

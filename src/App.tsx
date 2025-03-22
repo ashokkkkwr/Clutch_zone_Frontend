@@ -25,6 +25,7 @@ import PaymentSuccess from './ui/Components/user/pages/PaymentSuccess'
 import ErrorPage from './ErrorPage'
 import AddGears from './ui/Components/admin/AddGears'
 import { SocketProvider } from './context/SocketContext'
+import UserMatches from './ui/Components/user/pages/UserMatches'
 const router = createBrowserRouter([
   {
     path:'/',
@@ -61,7 +62,9 @@ const router = createBrowserRouter([
       {path:'profile',element:<Profile />},
       {path:'team',element:<UserTeam />},
       {path:'Cbucks',element:<ClutchBucks />},
-      {path:'paymentsuccess',element:<PaymentSuccess />}
+      {path:'paymentsuccess',element:<PaymentSuccess />},
+      {path:'user-matches',element:<UserMatches />},
+
  
     ]
   },{
