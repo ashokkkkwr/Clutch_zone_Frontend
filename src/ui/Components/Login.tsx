@@ -141,6 +141,9 @@ const Login: React.FC = () => {
           className="max-w-full rounded-xl"
         />
       </div>
+      <div>
+        <img src="http://localhost:5000/uploads/gameCoverImages/1742223857018.jpgnpn" alt="" />
+      </div>
     </div>
   );
 };

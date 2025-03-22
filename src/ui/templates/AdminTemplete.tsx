@@ -12,10 +12,6 @@ export default function AdminTemplete() {
     <AdminSideNavbar />
     <Outlet />
     </div>
-     
-   
-        
-
     </div>
   )
 }
