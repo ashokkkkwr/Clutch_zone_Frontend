@@ -44,6 +44,9 @@ export default function myTournament() {
       </div>
     );
   }
+  if(data){
+    console.log("🚀 ~ myTournament ~ data:", data)
+  }
 
   if (error) {
     return (

@@ -281,6 +281,7 @@ function MatchCard({ match }: { match: Match }) {
       }
       
       const token = localStorage.getItem('token');
+      console.log(formData)
       await axios.post(`http://localhost:5000/api/scoreSubmission/create/${match.id}`, formData, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -323,7 +324,9 @@ function MatchCard({ match }: { match: Match }) {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <Calendar className="w-4 h-4 text-zinc-500" />
-              <span className="text-sm text-zinc-400">{formatDate(match.match_time)}</span>
+              {/* <span className="text-sm text-zinc-400">{formatDate(match.match_time)}</span> */}
+              <span>{new Date(match.match_time).toLocaleDateString('en-us')}</span>
+              <span> {match.match_time}</span>
             </div>
             <div className="flex items-center space-x-2">
               <Gamepad2 className="w-4 h-4 text-zinc-500" />
