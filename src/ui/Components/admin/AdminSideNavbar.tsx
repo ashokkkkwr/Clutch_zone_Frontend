@@ -19,12 +19,12 @@ const Sidebar = () => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const navItems = [
-    { to: '/dashboard', icon: Home, label: 'Dashboard' },
+    { to: '/admin/dashboard', icon: Home, label: 'Dashboard' },
     { to: '/admin/add-games', icon: GamepadIcon, label: 'Games' },
     { to: '/admin/tournament', icon: Trophy, label: 'Tournaments' },
     { to: '/admin/add-gears', icon: Headphones, label: 'Gaming Gear' },
-    { to: '/wallet', icon: Wallet, label: 'Wallet' },
-    { to: '/transactions', icon: Receipt, label: 'Transactions' },
+    { to: '/admin/subscription', icon: Wallet, label: 'subscription' },
+    { to: '/admin/scores', icon: Receipt, label: 'Scores' },
     { to: '/teams', icon: Users, label: 'Teams' },
     { to: '/users', icon: User, label: 'Users' },
     { to: '/logout', icon: LogOut, label: 'Logout' },

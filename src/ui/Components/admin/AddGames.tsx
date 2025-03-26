@@ -34,7 +34,6 @@ export default function AddGames() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isPopupVisible, setIsPopupVisible] = useState<boolean>(false);
   const { data, loading, error } = useQuery(FETCH_GAMES);
-
   const {
     handleSubmit,
     register,
@@ -60,11 +59,18 @@ export default function AddGames() {
     }
 
     try {
+      const token = localStorage.getItem("token");
+      console.log("🚀 ~ onSubmit ~ token:", token)
+if (!token) {
+  console.error("No token found");
+  return;
+}
       const response = await axios.post<ApiResponse>(
         "http://localhost:5000/api/game/create",
         submitData,
         {
-          headers: { "Content-Type": "multipart/form-data" },
+          headers: { "Content-Type": "multipart/form-data" ,Authorization: `Bearer ${token}`},
+          
         }
       );
       setSuccessMessage(response.data.message);

@@ -45,7 +45,7 @@ const Login: React.FC = () => {
         console.log(response.data.login.token, 'role')
         if(response?.data?.login?.role=="admin") {
           console.log('admin')
-          navigate("/admin/landing");
+          navigate("/admin/dashboard");
       }else{
         console.log('user')
         navigate("/user/home");

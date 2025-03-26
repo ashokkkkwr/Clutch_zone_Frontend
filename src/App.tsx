@@ -26,6 +26,9 @@ import ErrorPage from './ErrorPage'
 import AddGears from './ui/Components/admin/AddGears'
 import { SocketProvider } from './context/SocketContext'
 import UserMatches from './ui/Components/user/pages/UserMatches'
+import Score from './ui/Components/admin/Score'
+import Dashboard from './ui/Components/admin/Dashboard'
+import AdminSubscription from './ui/Components/admin/AdminSubscription'
 const router = createBrowserRouter([
   {
     path:'/',
@@ -79,6 +82,13 @@ const router = createBrowserRouter([
       {path:'tournament',element:<AddTournament/>},
       {path:'tournament-details/:id',element:<AdminTournamentDetails />},
       {path:'DisplayBracket/:id',element:<AdminBracektDisplay />},
+      {path:'scores',element:<Score />},
+      {path:'dashboard',element:<Dashboard />},
+      {path:'subscription',element:<AdminSubscription />},
+
+
+
+
 
 
       // {path:'bracket',element:< TournamentPage/>},

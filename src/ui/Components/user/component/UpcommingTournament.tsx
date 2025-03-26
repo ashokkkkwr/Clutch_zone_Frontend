@@ -30,7 +30,10 @@ const FETCH_TOURNAMENT = gql`
 export default function UpcommingTournament() {
   const navigate = useNavigate();
   const { data, loading, error } = useQuery(FETCH_TOURNAMENT);
-
+if(data){
+  console.log("🚀 ~ UpcommingTournament ~ data:", data)
+  
+}
   if (loading) {
     return (
       <div className="min-h-[600px] bg-gradient-to-b from-gray-900 to-black flex items-center justify-center">
@@ -64,7 +67,7 @@ export default function UpcommingTournament() {
   const hasTournaments = tournaments.length > 0;
   return (
     <div>
-              {/* Tournament Grid */}
+            
               {hasTournaments ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {tournaments.slice(0, 6).map((tournament: any) => (
@@ -101,7 +104,11 @@ export default function UpcommingTournament() {
 
                   <div className="flex items-center gap-2 text-sm text-gray-400">
                     <Clock className="w-4 h-4" />
-                    <span>Starts: {new Date(tournament.tournament_registration_start_date).toLocaleDateString()}</span>
+                    <span>
+    Starts: {new Date(tournament.tournament_registration_start_date).toLocaleDateString('en-US')}
+  </span>
+                    <span>{tournament.tournament_registration_start_date}</span>
+                    <span>Starts: {new Date(tournament.tournament_registration_start_date).toLocaleDateString('en-us')}</span>
                   </div>
 
                   <div className="flex gap-3 pt-2">
