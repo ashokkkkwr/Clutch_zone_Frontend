@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { gql, useQuery } from "@apollo/client";
 import { useForm, Controller } from "react-hook-form";
-
 const FETCH_GAMES = gql`
   query GetGears {
     getGears {
@@ -15,7 +14,6 @@ const FETCH_GAMES = gql`
     }
   }
 `;
-
 interface Gear {
   id: string;
   name: string;
@@ -24,11 +22,9 @@ interface Gear {
   image: string;
   stock: string;
 }
-
 interface ApiResponse {
   message: string;
 }
-
 interface FormValues {
   name: string;
   description: string;
@@ -36,14 +32,12 @@ interface FormValues {
   stock: string;
   image: FileList | null;
 }
-
 export default function AddGears() {
   const [successMessage, setSuccessMessage] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isPopupVisible, setIsPopupVisible] = useState<boolean>(false);
   const { data, loading, error } = useQuery(FETCH_GAMES);
-
   const {
     handleSubmit,
     register,
@@ -51,13 +45,11 @@ export default function AddGears() {
     reset,
     formState: { errors },
   } = useForm<FormValues>();
-
   useEffect(() => {
     if (data) {
       console.log("Fetched Gears:", data.getGears);
     }
   }, [data]);
-
   const onSubmit = async (formData: FormValues) => {
     const submitData = new FormData();
     submitData.append("name", formData.name);
@@ -68,7 +60,6 @@ export default function AddGears() {
     if (formData.image && formData.image[0]) {
       submitData.append("image", formData.image[0]);
     }
-
     try {
       const response = await axios.post<ApiResponse>(
         "http://localhost:5000/api/gear/create",

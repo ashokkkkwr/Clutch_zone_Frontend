@@ -18,7 +18,6 @@ const GET_OWN_TEAM_DETAILS = gql`
       user {
         email
         id
-        
         username
       }
     }

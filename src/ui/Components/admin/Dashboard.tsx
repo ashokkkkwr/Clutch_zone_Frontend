@@ -138,6 +138,7 @@ export default function Dashboard() {
       const response = await axios.get<ApiResponse>(
         "http://localhost:5000/api/dashboard/get"
       );
+      console.log("🚀 ~ fetchDashboardStats ~ response:", response)
       setDashboardStats(response.data.data);
       setUserActivityData(response.data.data.users.weekly);
     } catch (error) {
@@ -146,7 +147,6 @@ export default function Dashboard() {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     fetchDashboardStats();
   }, []);
@@ -293,7 +293,7 @@ export default function Dashboard() {
           <div className="bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-700">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold text-gray-200">
-                Match Status Distribution
+                Score submission status
               </h3>
               <PieChart className="w-5 h-5 text-gray-400" />
             </div>
