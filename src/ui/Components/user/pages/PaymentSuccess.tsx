@@ -1,24 +1,41 @@
 import { useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { CheckCircle, Copy, RefreshCw, Gamepad2 } from "lucide-react";
 
 const SuccessPayment = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   // Extract clutchbuckId and remove extra appended data
   const rawClutchbuckId = searchParams.get("clutchbuck_id") || "";
   const clutchbuckId = rawClutchbuckId.match(/^\d+/)?.[0] || "";
 
   useEffect(() => {
+    // Check if the page was reloaded
+    const navigationEntries = performance.getEntriesByType("navigation");
+    const isReload =
+      navigationEntries.length > 0 &&
+      navigationEntries[0].type === "reload";
+    if (isReload) {
+      navigate("/user/home");
+      return;
+    }
     if (clutchbuckId) {
       axios
-        .post("http://localhost:5000/api/paymentsuccess", { clutchbuck_id: clutchbuckId })
+        .post(
+          "http://localhost:5000/api/payment/paymentsuccess",
+          { clutchbuck_id: clutchbuckId },
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        )
         .then((res) => console.log("Payment Success Data Sent:", res.data))
         .catch((err) => console.error("Error sending success data:", err));
     }
-    
-  }, [clutchbuckId]);
+  }, [clutchbuckId, navigate]);
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(clutchbuckId);
@@ -80,7 +97,7 @@ const SuccessPayment = () => {
 
           {/* Back Button */}
           <button 
-            onClick={() => window.location.href = '/user/home'}
+            onClick={() => navigate('/user/home')}
             className="mt-8 w-full bg-red-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-red-700 transition-colors relative group overflow-hidden"
           >
             <span className="relative z-10">Return to Game</span>

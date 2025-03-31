@@ -10,11 +10,11 @@ const client = new ApolloClient({
   cache: new InMemoryCache(), // Set up caching for queries
 });
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
+ 
         <ApolloProvider client={client}>
 
     <App />
     </ApolloProvider>
 
-  </StrictMode>,
+
 )

@@ -4,13 +4,15 @@ import { gql, useQuery } from "@apollo/client";
 import { useForm, Controller } from "react-hook-form";
 
 const FETCH_GAMES = gql`
-  query Query {
-    getGames {
-      game_cover_image
-      game_name
-      id
-    }
+query GetGames {
+  getGames {
+    id
+    game_name
+    game_cover_image
+    game_icon_image
   }
+}
+
 `;
 interface Game {
   id: string;
@@ -66,13 +68,8 @@ if (!token) {
   return;
 }
       const response = await axios.post<ApiResponse>(
-        "http://localhost:5000/api/game/create",
-        submitData,
-        {
-          headers: { "Content-Type": "multipart/form-data" ,Authorization: `Bearer ${token}`},
-          
-        }
-      );
+        "http://localhost:5000/api/game/create",submitData, {headers: { "Content-Type": "multipart/form-data" ,Authorization: `Bearer ${token}`},
+          });
       setSuccessMessage(response.data.message);
       setErrorMessage("");
       reset();

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { gql, useMutation, useQuery } from "@apollo/client";
-import { Trophy, Clock, HandMetal, X, Plus } from "lucide-react";
+import { Trophy, Clock, HandMetal, X, Plus, UserCheck } from "lucide-react";
 import { useForm } from "react-hook-form";
 import axios from "axios";
+import {jwtDecode} from "jwt-decode";
 
 const FETCH_TEAM = gql`
   query GetTeams {
@@ -12,8 +13,6 @@ const FETCH_TEAM = gql`
     description
     logo
     maxPlayers
-    
-  
     teamPlayers {
       role
       user {
@@ -25,6 +24,7 @@ const FETCH_TEAM = gql`
   }
 }
 `;
+
 const JOIN_TEAM = gql`
   mutation SendJoinRequest($teamId: ID!) {
     sendJoinRequest(teamId: $teamId) {
@@ -37,9 +37,19 @@ const JOIN_TEAM = gql`
 
 export default function HomeTeam() {
   const { data, loading, error } = useQuery(FETCH_TEAM);
+
+  const token = localStorage.getItem('token');
+  const decodedToken:any = jwtDecode(token!);
+  const loggedInuserId = decodedToken.id;
+
+  const isUserInTeam = (team: any) => {
+    return team.teamPlayers?.some((player: any) => player.user.id === loggedInuserId);
+  };
+
   if(error){
     console.log(error,'teamn ko errror')
   }
+  
   const {
     register,
     handleSubmit,
@@ -50,6 +60,7 @@ export default function HomeTeam() {
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [JoinTeam] = useMutation(JOIN_TEAM);
+  
   const joinTeam = async (team_id: string) => {
     console.log("🚀 ~ joinTeam ~ team_id:", team_id);
     const token = localStorage.getItem("token");
@@ -71,6 +82,7 @@ export default function HomeTeam() {
       console.log("🚀 ~ joinTeam ~ error:", error);
     }
   };
+
   useEffect(() => {
     if (data) {
       console.log("Fetched Teams:", data.getTeams);
@@ -113,10 +125,8 @@ export default function HomeTeam() {
     <div className="min-h-screen bg-[#001219] text-white p-8">
       {/* Header Section */}
       <div className="px-28 mx-auto">
-   
-
         <h1 className="text-[24px] font-bold italic tracking-[0%] leading-auto font-[Poppins] mb-4 ">#GameForGood</h1>
-        <p className="text-gray-300 text-[16px]  tracking-[0%] leading-auto font-[Poppins]  mb-8">
+        <p className="text-gray-300 text-[16px] tracking-[0%] leading-auto font-[Poppins] mb-8">
           Win in our tournaments or be part of play as you go to earn money and
           help those in need{" "}
           <a href="#" className="text-orange-500 hover:text-orange-400">
@@ -129,7 +139,7 @@ export default function HomeTeam() {
           {/* Tournaments */}
           <div className="bg-[#1a1a2e] rounded-xl p-6 hover:bg-[#1a1a2e]/80 transition">
             <Trophy className="w-12 h-12 text-emerald-400 mb-4" />
-            <h2 className="text-[16px]  tracking-[0%] leading-auto font-[Poppins] mb-2 text-emerald-400">Tournaments</h2>
+            <h2 className="text-[16px] tracking-[0%] leading-auto font-[Poppins] mb-2 text-emerald-400">Tournaments</h2>
             <p className="text-gray-400 text-sm mb-4">
               Compete in any of our weekly tournaments. If you win, you can
               donate a portion of your prize to a charity of your choice.
@@ -142,7 +152,7 @@ export default function HomeTeam() {
           {/* Play As You Go */}
           <div className="bg-[#1a1a2e] rounded-xl p-6 hover:bg-[#1a1a2e]/80 transition">
             <Clock className="w-12 h-12 text-cyan-400 mb-4" />
-            <h2 className="text-[16px]  tracking-[0%] leading-auto font-[Poppins] mb-2 text-cyan-400">Play As You Go</h2>
+            <h2 className="text-[16px] tracking-[0%] leading-auto font-[Poppins] mb-2 text-cyan-400">Play As You Go</h2>
             <p className="text-gray-400 text-sm mb-4">
               Compete anywhere anytime against random players. If you lose the
               match, you can pledge to donate to a charity of your choice.
@@ -155,7 +165,7 @@ export default function HomeTeam() {
           {/* Challenge */}
           <div className="bg-[#1a1a2e] rounded-xl p-6 hover:bg-[#1a1a2e]/80 transition">
             <HandMetal className="w-12 h-12 text-yellow-400 mb-4" />
-            <h2 className="text-[16px]  tracking-[0%] leading-auto font-[Poppins] mb-2 text-yellow-400">Challenge</h2>
+            <h2 className="text-[16px] tracking-[0%] leading-auto font-[Poppins] mb-2 text-yellow-400">Challenge</h2>
             <p className="text-gray-400 text-sm mb-4">
               Click 'Challenge' on any player's profile. If you lose the match,
               you can pledge to donate to a charity of your choice.
@@ -170,29 +180,55 @@ export default function HomeTeam() {
         <div>
           <h2 className="text-2xl font-bold mb-6">TOP TEAMS</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {data?.getTeams?.map((team: any, index: any) => (
-              <div
-                key={index}
-                className="bg-[#1a1a2e] rounded-xl overflow-hidden "
-              >
-                <img
-                  src={team.logo}
-                  alt={team.team_name}
-                  className="w-full h-40 object-cover"
-                />
-                <h3 className="font-bold mt-2">{team.team_name}</h3>
-                <p className="text-sm text-gray-400">
-                    {team.teamPlayers
-                      ? `${team.teamPlayers.length} Members`
-                      : "No members"}
-                  </p>
-                <button onClick={() => joinTeam(team.id)}>join team</button>
-              </div>
-            ))}
+            {data?.getTeams?.map((team: any, index: any) => {
+              const isMember = isUserInTeam(team);
+              return (
+                <div
+                  key={index}
+                  className={`bg-[#1a1a2e] rounded-xl overflow-hidden relative ${
+                    isMember ? 'ring-2 ring-emerald-500' : ''
+                  }`}
+                >
+                  {isMember && (
+                    <div className="absolute top-2 right-2 bg-emerald-500 text-white p-2 rounded-full z-10">
+                      <UserCheck className="w-4 h-4" />
+                    </div>
+                  )}
+                  <div className="relative">
+                    <img
+                      src={team.logo}
+                      alt={team.team_name}
+                      className={`w-full h-40 object-cover ${
+                        isMember ? 'brightness-110' : ''
+                      }`}
+                    />
+                    {isMember && (
+                      <div className="absolute inset-0 bg-gradient-to-t from-emerald-500/20 to-transparent"></div>
+                    )}
+                  </div>
+                  <div className="p-4">
+                    <h3 className="font-bold mt-2">{team.team_name}</h3>
+                    <p className="text-sm text-gray-400">
+                      {team.teamPlayers
+                        ? `${team.teamPlayers.length} Members`
+                        : "No members"}
+                    </p>
+                    {!isMember && (
+                      <button 
+                        onClick={() => joinTeam(team.id)}
+                        className="mt-3 w-full bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-md transition-colors"
+                      >
+                        Join Team
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
 
             {/* Create Team Button */}
             <div
-              className="bg-[#1a1a2e] rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer"
+              className="bg-[#1a1a2e] rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-[#1a1a2e]/80 transition"
               onClick={() => setIsFormOpen(true)}
             >
               <div className="w-16 h-16 rounded-full bg-orange-500 flex items-center justify-center mb-4">
@@ -232,9 +268,6 @@ export default function HomeTeam() {
                       })}
                       className="w-full bg-gray-800 text-white p-2 rounded"
                     />
-                    {/* {errors.team_name && (
-                      // <span className="text-red-500 text-sm">{errors.team_name.message}</span>
-                    )} */}
                   </div>
 
                   <div>
@@ -249,9 +282,6 @@ export default function HomeTeam() {
                       })}
                       className="w-full bg-gray-800 text-white p-2 rounded"
                     />
-                    {/* {errors.max_players && (
-                      // <span className="text-red-500 text-sm">{errors.max_players.message}</span>
-                    )} */}
                   </div>
 
                   <div>
@@ -265,9 +295,6 @@ export default function HomeTeam() {
                       })}
                       className="w-full bg-gray-800 text-white p-2 rounded"
                     />
-                    {/* {errors.image && (
-                      // <span className="text-red-500 text-sm">{errors.image.message}</span>
-                    )} */}
                   </div>
                 </div>
 
@@ -290,6 +317,7 @@ export default function HomeTeam() {
             </div>
           </div>
         )}
+        
         {/* Success and Error Messages */}
         {successMessage && (
           <div className="fixed bottom-4 left-4 bg-green-600 text-white px-4 py-2 rounded-lg">

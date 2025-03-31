@@ -1,6 +1,6 @@
 import { gql, useMutation, useQuery } from "@apollo/client";
 import React, { useRef } from "react";
-import { UserPlus } from 'lucide-react';
+import { UserPlus, Circle } from 'lucide-react';
 
 interface JoinRequest {
   id: string;
@@ -10,6 +10,24 @@ interface JoinRequest {
     username: string;
     email: string;
   };
+}
+
+interface TeamPlayer {
+  role: string;
+  user: {
+    id: string;
+    username: string;
+    email: string;
+  };
+}
+
+interface Team {
+  id: string;
+  team_name: string;
+  description: string;
+  logo: string;
+  maxPlayers: number;
+  teamPlayers: TeamPlayer[];
 }
 
 const FETCH_TEAM = gql`
@@ -77,7 +95,7 @@ export default function Overview() {
     data: teamsData,
     loading: teamsLoading,
     error: teamsError,
-  } = useQuery<{ getTeams: any }>(FETCH_TEAM, {
+  } = useQuery<{ getTeams: Team[] }>(FETCH_TEAM, {
     context: { headers: authHeaders },
   });
 
@@ -124,6 +142,9 @@ export default function Overview() {
     }
   };
 
+  // Get all team members from all teams
+  const allTeamMembers = teamsData?.getTeams?.flatMap(team => team.teamPlayers) || [];
+
   return (
     <div
       ref={topTeamsRef}
@@ -133,25 +154,32 @@ export default function Overview() {
       <div className="w-1/4 flex flex-col gap-6">
         {/* Online Members */}
         <div className="bg-[#161B22] p-4 rounded-lg">
-          <h3 className="text-lg font-bold">2 online members</h3>
-          <div className="mt-2 flex gap-3">
-            <div className="flex flex-col items-center">
-              <img
-                src="https://via.placeholder.com/50"
-                alt="MD Arsolon"
-                className="rounded-full"
-              />
-              <p className="text-sm">Ashok Katwal</p>
+          <h3 className="text-lg font-bold mb-4">Team Members</h3>
+          {teamsLoading ? (
+            <p className="text-gray-400">Loading members...</p>
+          ) : teamsError ? (
+            <p className="text-red-500">Error loading members</p>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {allTeamMembers.map((member) => (
+                <div key={member.user.id} className="flex flex-col items-center">
+                  <div className="relative">
+                    <img
+                      src={`https://api.dicebear.com/7.x/initials/svg?seed=${member.user.username}`}
+                      alt={member.user.username}
+                      className="w-12 h-12 rounded-full bg-gray-700"
+                    />
+                    <Circle className="absolute bottom-0 right-0 w-3 h-3 text-green-500 fill-green-500" />
+                  </div>
+                  <p className="text-sm mt-1 text-center">{member.user.username}</p>
+                  <p className="text-xs text-gray-400 capitalize">{member.role}</p>
+                </div>
+              ))}
+              {allTeamMembers.length === 0 && (
+                <p className="text-gray-400 text-sm col-span-2">No team members yet</p>
+              )}
             </div>
-            <div className="flex flex-col items-center">
-              <img
-                src="https://via.placeholder.com/50"
-                alt="Subu"
-                className="rounded-full"
-              />
-              <p className="text-sm">Subu</p>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Team Join Requests */}
@@ -202,7 +230,7 @@ export default function Overview() {
 
           <div className="mt-4 bg-[#1F2937] ">
             {teamsData?.getTeams?.length > 0 ? (
-              teamsData!.getTeams.map((team: any) => (
+              teamsData.getTeams.map((team: Team) => (
                 <div
                   key={team.id}
                   className="p-4 rounded-xl mb-4 overflow-hidden"
