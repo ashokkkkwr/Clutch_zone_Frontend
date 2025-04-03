@@ -1,6 +1,16 @@
-import axios from 'axios';
-import React, { useEffect, useState } from 'react';
-import { Trophy, Calendar, User, Users, Timer, Medal, Gamepad2, X, Upload } from 'lucide-react';
+import axios from "axios";
+import React, { useEffect, useState } from "react";
+import {
+  Trophy,
+  Calendar,
+  User,
+  Users,
+  Timer,
+  Medal,
+  Gamepad2,
+  X,
+  Upload,
+} from "lucide-react";
 
 interface Player {
   id: number;
@@ -57,7 +67,7 @@ interface Match {
   tournamentId: number;
   round: number;
   position: number;
-  player1Id: number;
+  player1Id: number | null;
   player2Id: number | null;
   winnerId: number | null;
   team1Id: number | null;
@@ -89,16 +99,11 @@ interface ScoreFormData {
   opponentScore: number;
   screenshot: File | null;
 }
-
-function formatDate(dateString: string) {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
-}
-
-function ScoreSubmissionPopup({ onClose, onSubmit, isPointsBased }: ScoreSubmissionPopupProps) {
+function ScoreSubmissionPopup({
+  onClose,
+  onSubmit,
+  isPointsBased,
+}: ScoreSubmissionPopupProps) {
   const [formData, setFormData] = useState<ScoreFormData>({
     kills: 0,
     placement: 0,
@@ -127,7 +132,15 @@ function ScoreSubmissionPopup({ onClose, onSubmit, isPointsBased }: ScoreSubmiss
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setFormData(prev => ({ ...prev, screenshot: e.target.files[0] }));
+      if (!e.target.files[0]) {
+        return (
+          <>
+            <p> Pleaase select the image</p>
+          </>
+        );
+      } else {
+        setFormData((prev) => ({ ...prev, screenshot: e.target.files[0] }));
+      }
     }
   };
 
@@ -140,7 +153,9 @@ function ScoreSubmissionPopup({ onClose, onSubmit, isPointsBased }: ScoreSubmiss
         >
           <X className="w-5 h-5" />
         </button>
-        <h2 className="text-xl font-bold text-white mb-6">Submit Match Score</h2>
+        <h2 className="text-xl font-bold text-white mb-6">
+          Submit Match Score
+        </h2>
         <div className="space-y-4">
           {isPointsBased ? (
             <>
@@ -153,7 +168,10 @@ function ScoreSubmissionPopup({ onClose, onSubmit, isPointsBased }: ScoreSubmiss
                   min="0"
                   value={formData.kills}
                   onChange={(e) =>
-                    setFormData(prev => ({ ...prev, kills: parseInt(e.target.value) || 0 }))
+                    setFormData((prev) => ({
+                      ...prev,
+                      kills: parseInt(e.target.value) || 0,
+                    }))
                   }
                   className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
                 />
@@ -168,7 +186,10 @@ function ScoreSubmissionPopup({ onClose, onSubmit, isPointsBased }: ScoreSubmiss
                   max="100"
                   value={formData.placement}
                   onChange={(e) =>
-                    setFormData(prev => ({ ...prev, placement: parseInt(e.target.value) || 0 }))
+                    setFormData((prev) => ({
+                      ...prev,
+                      placement: parseInt(e.target.value) || 0,
+                    }))
                   }
                   className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
                 />
@@ -184,7 +205,10 @@ function ScoreSubmissionPopup({ onClose, onSubmit, isPointsBased }: ScoreSubmiss
                 min="0"
                 value={formData.playerScore}
                 onChange={(e) =>
-                  setFormData(prev => ({ ...prev, playerScore: parseInt(e.target.value) || 0 }))
+                  setFormData((prev) => ({
+                    ...prev,
+                    playerScore: parseInt(e.target.value) || 0,
+                  }))
                 }
                 className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
               />
@@ -210,7 +234,9 @@ function ScoreSubmissionPopup({ onClose, onSubmit, isPointsBased }: ScoreSubmiss
                 <div className="flex flex-col items-center">
                   <Upload className="w-6 h-6 text-zinc-400 mb-2" />
                   <span className="text-sm text-zinc-400">
-                    {formData.screenshot ? formData.screenshot.name : 'Upload match screenshot'}
+                    {formData.screenshot
+                      ? formData.screenshot.name
+                      : "Upload match screenshot"}
                   </span>
                 </div>
               </label>
@@ -220,7 +246,9 @@ function ScoreSubmissionPopup({ onClose, onSubmit, isPointsBased }: ScoreSubmiss
           <div className="mt-6 p-4 bg-zinc-800 rounded-lg">
             <div className="flex justify-between items-center">
               <span className="text-zinc-300">Total Score:</span>
-              <span className="text-xl font-bold text-yellow-500">{totalScore} points</span>
+              <span className="text-xl font-bold text-yellow-500">
+                {totalScore} points
+              </span>
             </div>
           </div>
 
@@ -236,12 +264,10 @@ function ScoreSubmissionPopup({ onClose, onSubmit, isPointsBased }: ScoreSubmiss
     </div>
   );
 }
-
 function MatchCard({ match }: { match: Match }) {
   const isPointsBased = match.tournament.is_points_based;
   const [showForm, setShowForm] = useState(false);
   const [canSubmitScore, setCanSubmitScore] = useState(false);
-
   useEffect(() => {
     const matchTime = new Date(match.match_time).getTime();
     const now = Date.now();
@@ -256,50 +282,55 @@ function MatchCard({ match }: { match: Match }) {
     }
   }, [match.match_time]);
 
-  const handleScoreSubmit = async (data: ScoreFormData & { totalScore: number }) => {
+  const handleScoreSubmit = async (
+    data: ScoreFormData & { totalScore: number }
+  ) => {
     try {
       const formData = new FormData();
       if (isPointsBased) {
-        formData.append('kills', data.kills.toString());
-        formData.append('placement', data.placement.toString());
-        formData.append('points', data.totalScore.toString());
+        formData.append("kills", data.kills.toString());
+        formData.append("placement", data.placement.toString());
+        formData.append("points", data.totalScore.toString());
       } else {
-        formData.append('points', data.totalScore.toString());
+        formData.append("points", data.totalScore.toString());
       }
       if (data.screenshot) {
-        formData.append('score_submission_image', data.screenshot);
+        formData.append("score_submission_image", data.screenshot);
       }
-      
-      const token = localStorage.getItem('token');
+
+      const token = localStorage.getItem("token");
       const url = `http://localhost:5000/api/scoreSubmission/create/${match.id}`;
-      
+
       // If a score has already been submitted, use PATCH; otherwise, use POST
       if (match.scoreSubmitted) {
         await axios.patch(url, formData, {
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
           },
         });
       } else {
         await axios.post(url, formData, {
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
           },
         });
       }
-      
+
       setShowForm(false);
       // Optionally, refresh match data here
     } catch (error) {
-      console.error('Failed to submit score:', error);
+      console.error("Failed to submit score:", error);
       // Handle error appropriately (e.g., show an error message)
     }
   };
 
   // Determine participant for points-based matches
-  const isTeam = isPointsBased && !!match.team1;
+  const isTeam = ["duo", "squad"].includes(
+    match.tournament.tournament_game_mode.toLowerCase()
+  );
+  console.log("🚀 ~ MatchCard ~ isTeam:", isTeam);
 
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-lg shadow-lg hover:shadow-xl hover:border-zinc-700 transition-all duration-300 overflow-hidden">
@@ -307,15 +338,17 @@ function MatchCard({ match }: { match: Match }) {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
             <Trophy className="w-6 h-6 text-yellow-500" />
-            <h3 className="text-lg font-bold text-white">{match.tournament.tournament_name}</h3>
+            <h3 className="text-lg font-bold text-white">
+              {match.tournament.tournament_name}
+            </h3>
           </div>
           <span
             className={`px-4 py-1 rounded-full text-sm font-medium ${
-              match.status.toLowerCase() === 'completed'
-                ? 'bg-green-900/50 text-green-400 border border-green-700'
-                : match.status.toLowerCase() === 'pending'
-                ? 'bg-yellow-900/50 text-yellow-400 border border-yellow-700'
-                : 'bg-zinc-800 text-zinc-400 border border-zinc-700'
+              match.status.toLowerCase() === "completed"
+                ? "bg-green-900/50 text-green-400 border border-green-700"
+                : match.status.toLowerCase() === "pending"
+                ? "bg-yellow-900/50 text-yellow-400 border border-yellow-700"
+                : "bg-zinc-800 text-zinc-400 border border-zinc-700"
             }`}
           >
             {match.status}
@@ -326,7 +359,9 @@ function MatchCard({ match }: { match: Match }) {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <Calendar className="w-4 h-4 text-zinc-500" />
-              <span>{new Date(match.match_time).toLocaleDateString('en-US')}</span>
+              <span>
+                {new Date(match.match_time).toLocaleDateString("en-US")}
+              </span>
               <span>{match.match_time}</span>
             </div>
             <div className="flex items-center space-x-2">
@@ -339,21 +374,27 @@ function MatchCard({ match }: { match: Match }) {
             <div className="flex items-center justify-between p-4 bg-zinc-800/50 rounded-xl border border-zinc-700">
               <div className="flex items-center space-x-4 flex-1">
                 <div className="w-12 h-12 rounded-full bg-zinc-700 flex items-center justify-center ring-2 ring-zinc-600">
-                  {isTeam ? <Users className="w-6 h-6 text-zinc-300" /> : <User className="w-6 h-6 text-zinc-300" />}
+                  {isTeam ? (
+                    <Users className="w-6 h-6 text-zinc-300" />
+                  ) : (
+                    <User className="w-6 h-6 text-zinc-300" />
+                  )}
                 </div>
                 <div className="flex-1">
                   <p className="font-bold text-white">
-                    {isTeam ? match.team1?.team_name : match.player1.username}
+                    {isTeam
+                      ? match.team1?.team_name || "TBD"
+                      : match.player1?.username || "TBD"}
                   </p>
                   <p className="text-sm text-zinc-400">
-                    Points: {match.team1Score ?? match.player1Score ?? '0'}
+                    Points: {match.team1Score ?? match.player1Score ?? "0"}
                   </p>
                   {canSubmitScore && !match.winner && (
                     <button
                       onClick={() => setShowForm(true)}
                       className="mt-4 bg-yellow-500 text-black font-bold py-2 px-4 rounded hover:bg-yellow-400 transition-colors"
                     >
-                      {match.scoreSubmitted ? 'Update Score' : 'Submit Score'}
+                      {match.scoreSubmitted ? "Update Score" : "Submit Score"}
                     </button>
                   )}
                 </div>
@@ -366,8 +407,29 @@ function MatchCard({ match }: { match: Match }) {
                   <User className="w-6 h-6 text-zinc-300" />
                 </div>
                 <div>
-                  <p className="font-bold text-white">{match.player1.username}</p>
-                  <p className="text-sm text-zinc-400">Score: {match.player1Score ?? '0'}</p>
+                  {/* Player 1 */}
+                  <p className="font-bold text-white">
+                  {isTeam
+                      ? match.team1?.team_name || "TBD"
+                      : match.player1?.username || "TBD"}
+
+
+                    {/* {match.player1?.username || "TBD"} */}
+                  </p>
+                  {
+                    isTeam ? (
+                      <p className="text-sm text-zinc-400">
+                        Score: {match.team1Score ?? "0"}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-zinc-400">
+                        Score: {match.player1Score ?? "0"}
+                      </p>
+                    )
+                  }
+                  {/* <p className="text-sm text-zinc-400">
+                    Score: {match.player1Score ?? "0"}
+                  </p> */}
                 </div>
               </div>
               <div className="px-4 py-2 rounded-full bg-zinc-700 text-white text-sm font-bold border border-zinc-600">
@@ -375,8 +437,28 @@ function MatchCard({ match }: { match: Match }) {
               </div>
               <div className="flex items-center space-x-4">
                 <div>
-                  <p className="font-bold text-white text-right">{match.player2?.username || 'TBD'}</p>
-                  <p className="text-sm text-zinc-400 text-right">Score: {match.player2Score ?? '0'}</p>
+                <p className="font-bold text-white">
+                  {isTeam
+                      ? match.team2?.team_name || "TBD"
+                      : match.player2?.username || "TBD"}
+
+
+                    {/* {match.player1?.username || "TBD"} */}
+                  </p>
+                  {
+                    isTeam?(
+                      <p className="text-sm text-zinc-400">
+                        Score: {match.team2Score ?? "0"}
+                      </p>
+                    ):(
+                      <p className="text-sm text-zinc-400">
+                        Score: {match.player2Score ?? "0"}
+                      </p>
+                    )
+                  }
+                  {/* <p className="text-sm text-zinc-400 text-right">
+                    Score: {match.player2Score ?? "0"}
+                  </p> */}
                 </div>
                 <div className="w-12 h-12 rounded-full bg-zinc-700 flex items-center justify-center ring-2 ring-zinc-600">
                   <User className="w-6 h-6 text-zinc-300" />
@@ -387,7 +469,7 @@ function MatchCard({ match }: { match: Match }) {
                   onClick={() => setShowForm(true)}
                   className="mt-4 bg-yellow-500 text-black font-bold py-2 px-4 rounded hover:bg-yellow-400 transition-colors"
                 >
-                  {match.scoreSubmitted ? 'Update Score' : 'Submit Score'}
+                  {match.scoreSubmitted ? "Update Score" : "Submit Score"}
                 </button>
               )}
             </div>
@@ -422,15 +504,19 @@ export default function UserMatches() {
 
   const getMatches = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5000/api/tournament/matches', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        "http://localhost:5000/api/tournament/matches",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      console.log("🚀 ~ getMatches ~ response:", response)
       setMatches(response.data);
     } catch (err) {
-      setError('Failed to load matches');
+      setError("Failed to load matches");
     } finally {
       setIsLoading(false);
     }
@@ -481,9 +567,7 @@ export default function UserMatches() {
               <p className="text-zinc-400 text-lg">No matches found</p>
             </div>
           ) : (
-            matches.map((match) => (
-              <MatchCard key={match.id} match={match} />
-            ))
+            matches.map((match) => <MatchCard key={match.id} match={match} />)
           )}
         </div>
       </div>

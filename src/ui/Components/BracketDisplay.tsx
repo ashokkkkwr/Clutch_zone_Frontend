@@ -22,21 +22,6 @@ interface Match {
   winnerTeamId: string;
   match_time: string;
 }
-interface LeaderboardEntry {
-  id: number;
-  name: string;
-  points: number;
-}
-
-interface TournamentData {
-  tournament_name: string;
-  isDraft: boolean;
-  isTeamTournament?: boolean;
-  isPointsBased?: boolean;
-  leaderboard?: LeaderboardEntry[];
-  message?: string;
-  matches: Match[];
-}
 
 interface Bracket {
   leaderboard: any;
@@ -337,38 +322,79 @@ if (bracket.isPointsBased) {
                       Match {match.position + 1}
                     </div>
                     <div className="space-y-4">
-                      <div
-                        className={`p-3 rounded-lg ${
-                          match.winner?.username === match.player1?.username
-                            ? "bg-green-900/20 border border-green-700"
-                            : "bg-gray-700/20"
-                        }`}
-                      >
-                        <p className="font-medium text-white">
-                          {match.player1?.username || "TBD"}
-                        </p>
-                      </div>
-                      <div
-                        className={`p-3 rounded-lg ${
-                          match.winner?.username === match.player2?.username
-                            ? "bg-green-900/20 border border-green-700"
-                            : "bg-gray-700/20"
-                        }`}
-                      >
-                        <p className="font-medium text-white">
-                          {match.player2?.username || "TBD"}
-                        </p>
-                      </div>
-                    </div>
+  {bracket.isTeamTournament ? (
+    <>
+      <div
+        className={`p-3 rounded-lg ${
+          match.winnerTeam?.team_name === match.team1?.team_name
+            ? "bg-green-900/20 border border-green-700"
+            : "bg-gray-700/20"
+        }`}
+      >
+        <p className="font-medium text-white">
+          {match.team1?.team_name || "TBD"}
+        </p>
+      </div>
+      <div
+        className={`p-3 rounded-lg ${
+          match.winnerTeam?.team_name === match.team2?.team_name
+            ? "bg-green-900/20 border border-green-700"
+            : "bg-gray-700/20"
+        }`}
+      >
+        <p className="font-medium text-white">
+          {match.team2?.team_name || "TBD"}
+        </p>
+      </div>
+    </>
+  ) : (
+    <>
+      <div
+        className={`p-3 rounded-lg ${
+          match.winner?.username === match.player1?.username
+            ? "bg-green-900/20 border border-green-700"
+            : "bg-gray-700/20"
+        }`}
+      >
+        <p className="font-medium text-white">
+          {match.player1?.username || "TBD"}
+        </p>
+      </div>
+      <div
+        className={`p-3 rounded-lg ${
+          match.winner?.username === match.player2?.username
+            ? "bg-green-900/20 border border-green-700"
+            : "bg-gray-700/20"
+        }`}
+      >
+        <p className="font-medium text-white">
+          {match.player2?.username || "TBD"}
+        </p>
+      </div>
+    </>
+  )}
+</div>
 
-                    {match.winner && (
-                      <div className="mt-4 flex items-center gap-2 text-green-400">
-                        <Trophy className="w-4 h-4" />
-                        <span className="text-sm font-medium">
-                          {match.winner.username}
-                        </span>
-                      </div>
-                    )}
+{/* Winner Display */}
+{bracket.isTeamTournament ? (
+  match.winnerTeam && (
+    <div className="mt-4 flex items-center gap-2 text-green-400">
+      <Trophy className="w-4 h-4" />
+      <span className="text-sm font-medium">
+        {match.winnerTeam.team_name}
+      </span>
+    </div>
+  )
+) : (
+  match.winner && (
+    <div className="mt-4 flex items-center gap-2 text-green-400">
+      <Trophy className="w-4 h-4" />
+      <span className="text-sm font-medium">
+        {match.winner.username}
+      </span>
+    </div>
+  )
+)}
 
                     {isButtonVisible(match) && (
                       <button 
