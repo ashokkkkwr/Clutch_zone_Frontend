@@ -2,6 +2,8 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ApolloProvider,ApolloClient,InMemoryCache } from '@apollo/client'
 import './index.css'
+import LanguageState from './context/Language/LanguageState.tsx'
+
 import App from './App.tsx'
 
 
@@ -12,8 +14,10 @@ const client = new ApolloClient({
 createRoot(document.getElementById('root')!).render(
  
         <ApolloProvider client={client}>
+          <LanguageState>
 
     <App />
+    </LanguageState>
     </ApolloProvider>
 
 

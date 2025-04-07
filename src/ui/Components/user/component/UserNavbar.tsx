@@ -3,6 +3,7 @@ import { NavLink } from "react-router-dom";
 import { ChevronDown, Gamepad2, Trophy, Users, Wallet, Home, Settings, LogOut, User } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import axios from "axios";
+import useLang from "../../../../hooks/useLang";
 
 interface ProfileData {
   user: {
@@ -45,7 +46,7 @@ interface ProfileData {
     }>;
   };
 }
-
+import { userNavbarLabel } from "../../../../localization/userNavbarLabel";
 export default function UserNavbar() {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
@@ -53,6 +54,7 @@ export default function UserNavbar() {
 
   const activeLinkClass = "text-white font-medium flex items-center gap-2 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-white";
   const defaultLinkClass = "text-gray-300 hover:text-white transition-all duration-300 flex items-center gap-2 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-white hover:after:w-full after:transition-all after:duration-300";
+  const { lang } = useLang();
 
   const Logout = () => {
     localStorage.removeItem('token');
@@ -100,7 +102,7 @@ export default function UserNavbar() {
           <div className="flex items-center space-x-2">
             <Gamepad2 className="w-8 h-8 text-purple-500" />
             <h1 className="text-3xl font-bold text-white tracking-tight">
-              Clutch<span className="text-purple-500">Zone</span>
+              {userNavbarLabel.clutch[lang]}<span className="text-purple-500">{userNavbarLabel.zone[lang]}</span>
             </h1>
           </div>
 
@@ -108,27 +110,31 @@ export default function UserNavbar() {
           <div className="hidden md:flex space-x-8">
             <NavLink to="/user/home" className={({ isActive }) => (isActive ? activeLinkClass : defaultLinkClass)}>
               <Home className="w-4 h-4" />
-              <span>Home</span>
+              <span>{userNavbarLabel.home[lang]}</span>
             </NavLink>
             <NavLink to="/user/tournament" className={({ isActive }) => (isActive ? activeLinkClass : defaultLinkClass)}>
               <Trophy className="w-4 h-4" />
-              <span>Tournament</span>
+              <span>{userNavbarLabel.tournament[lang]}</span>
             </NavLink>
             <NavLink to="/Leaderboard" className={({ isActive }) => (isActive ? activeLinkClass : defaultLinkClass)}>
               <Users className="w-4 h-4" />
-              <span>Leaderboard</span>
+              <span>{userNavbarLabel.Leaderboard[lang]}</span>
             </NavLink>
             <NavLink to="/user/team" className={({ isActive }) => (isActive ? activeLinkClass : defaultLinkClass)}>
               <Users className="w-4 h-4" />
-              <span>Team</span>
+              <span>{userNavbarLabel.team[lang]}</span>
             </NavLink>
             <NavLink to="/user/Cbucks" className={({ isActive }) => (isActive ? activeLinkClass : defaultLinkClass)}>
               <Wallet className="w-4 h-4" />
-              <span>CBucks</span>
+              <span>{userNavbarLabel.Cbucks[lang]}</span>
             </NavLink>
             <NavLink to="/user/user-matches" className={({ isActive }) => (isActive ? activeLinkClass : defaultLinkClass)}>
               <Users className="w-4 h-4" />
-              <span>Matches</span>
+              <span>{userNavbarLabel.matches[lang]}</span>
+            </NavLink>
+            <NavLink to="/user/settings" className={({ isActive }) => (isActive ? activeLinkClass : defaultLinkClass)}>
+              <Users className="w-4 h-4" />
+              <span>{userNavbarLabel.settings[lang]}</span>
             </NavLink>
           </div>
 

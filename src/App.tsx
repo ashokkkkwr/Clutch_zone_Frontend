@@ -29,6 +29,7 @@ import UserMatches from './ui/Components/user/pages/UserMatches'
 import Score from './ui/Components/admin/Score'
 import Dashboard from './ui/Components/admin/Dashboard'
 import AdminSubscription from './ui/Components/admin/AdminSubscription'
+import Setting from './ui/Components/user/pages/settings'
 const router = createBrowserRouter([
   {
     path:'/',
@@ -67,6 +68,8 @@ const router = createBrowserRouter([
       {path:'Cbucks',element:<ClutchBucks />},
       {path:'paymentsuccess',element:<PaymentSuccess />},
       {path:'user-matches',element:<UserMatches />},
+      {path:'settings',element:<Setting />},
+
 
  
     ]
