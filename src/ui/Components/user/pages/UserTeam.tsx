@@ -24,7 +24,21 @@ const GET_OWN_TEAM_DETAILS = gql`
   }
 }
 `;
-
+const GET_TEAM_MEMBERS = gql`
+query GetOwnTeams {
+  getOwnTeams {
+    user {
+      id
+      username
+      role
+      email
+      token
+      bio
+    }
+    role
+  }
+}
+`
 const JOIN_TEAM = gql`
   mutation SendJoinRequest($teamId: ID!) {
     sendJoinRequest(teamId: $teamId) {
@@ -40,6 +54,13 @@ export default function UserTeam() {
   const authHeaders = { Authorization: `Bearer ${token}` };
   const [sendJoinRequest] = useMutation(JOIN_TEAM);
   const contentRef = useRef<HTMLDivElement>(null);
+   const {
+      data: teamMembersData,
+      loading: teamMembersLoading,
+      error: teamMembersError,
+    } = useQuery(GET_TEAM_MEMBERS, {
+      context: { headers: authHeaders },  
+    });
   const [activeSection, setActiveSection] = useState<'overview' | 'media' | 'players'>('overview');
 
   if (!token) {
@@ -81,7 +102,9 @@ export default function UserTeam() {
   }
 
   const team = data?.getOwnTeamDetails;
-
+  if (teamMembersLoading) {
+    return <div className="text-white">Loading team members...</div>;
+  }
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black">
       {/* Hero Section */}
@@ -190,11 +213,23 @@ export default function UserTeam() {
           {activeSection === 'overview' && <Overview />}
           {activeSection === 'media' && <Media />}
           {activeSection === 'players' && (
-            <div className="text-center py-12">
-              <Users className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400 text-lg">Players roster coming soon...</p>
-            </div>
+  <div>
+    <h2 className="text-2xl font-bold text-white mb-6">Team Members</h2>
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      {teamMembersData?.getOwnTeams?.map((member:any, index:any) => (
+        <div key={member.user.id || index} className="bg-gray-900 rounded-lg p-4 shadow-md border border-gray-700">
+          <h3 className="text-lg font-semibold text-purple-400">{member.user.username}</h3>
+          <p className="text-gray-300 text-sm">{member.user.email}</p>
+          <p className="text-gray-400 text-sm mt-2 italic">{member.role}</p>
+          {member.user.bio && (
+            <p className="text-gray-500 text-xs mt-2">{member.user.bio}</p>
           )}
+        </div>
+      ))}
+    </div>
+  </div>
+)}
+
         </div>
       </div>
     </div>

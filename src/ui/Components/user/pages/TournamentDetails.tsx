@@ -329,7 +329,7 @@ export default function TournamentDetails() {
               <div className="flex justify-between items-center">
                 <span className="text-gray-400">Duration</span>
                 <span className="font-bold">
-                  {Math.ceil((new Date(tournament.tournament_end_date) - new Date(tournament.tournament_start_date)) / (1000 * 60 * 60 * 24))} days
+                  {Math.ceil((new Date(tournament.tournament_end_date).getTime() - new Date(tournament.tournament_start_date).getTime()) / (1000 * 60 * 60 * 24))} days
                 </span>
               </div>
             </div>

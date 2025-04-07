@@ -1,6 +1,7 @@
 import { gql, useMutation, useQuery } from "@apollo/client";
-import React, { useRef } from "react";
-import { UserPlus, Circle } from 'lucide-react';
+import React, { useRef, useState } from "react";
+import { UserPlus, Circle, Upload, Loader2, X, Download, Play } from 'lucide-react';
+import axios from "axios";
 
 interface JoinRequest {
   id: string;
@@ -30,6 +31,13 @@ interface Team {
   teamPlayers: TeamPlayer[];
 }
 
+interface MediaItem {
+  type: string;
+  media_url: string;
+  id: string;
+  createdAt: string;
+}
+
 const FETCH_TEAM = gql`
   query GetTeams {
     getTeams {
@@ -49,6 +57,21 @@ const FETCH_TEAM = gql`
     }
   }
 `;
+const GET_TEAM_MEMBERS = gql`
+query GetOwnTeams {
+  getOwnTeams {
+    user {
+      id
+      username
+      role
+      email
+      token
+      bio
+    }
+  }
+}
+`
+
 
 const FETCH_REQUESTS_TO_JOIN = gql`
   query GetPendingRequests {
@@ -78,6 +101,11 @@ const REJECT_REQUEST = gql`
 
 export default function Overview() {
   const topTeamsRef = useRef(null);
+  const [media, setMedia] = useState<MediaItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
+  const [hoveredVideo, setHoveredVideo] = useState<string | null>(null);
+  
   const token = localStorage.getItem("token");
   
   if (!token) {
@@ -98,6 +126,7 @@ export default function Overview() {
   } = useQuery<{ getTeams: Team[] }>(FETCH_TEAM, {
     context: { headers: authHeaders },
   });
+  
 
   // Join requests query
   const {
@@ -108,6 +137,14 @@ export default function Overview() {
   } = useQuery<{ getPendingRequests: JoinRequest[] }>(FETCH_REQUESTS_TO_JOIN, {
     context: { headers: authHeaders },
   });
+  const {
+    data: teamMembersData,
+    loading: teamMembersLoading,
+    error: teamMembersError,
+  } = useQuery(GET_TEAM_MEMBERS, {
+    context: { headers: authHeaders },  
+  });
+
 
   // Mutations
   const [acceptRequestMutation] = useMutation(ACCEPT_REQUEST);
@@ -142,14 +179,121 @@ export default function Overview() {
     }
   };
 
-  // Get all team members from all teams
-  const allTeamMembers = teamsData?.getTeams?.flatMap(team => team.teamPlayers) || [];
+  const handleDownload = async (mediaUrl: string) => {
+    try {
+      const response = await fetch(mediaUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = mediaUrl.split('/').pop() || 'download';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error("Failed to download media");
+    }
+  };
+  const getMedia = async () => {
+    setIsLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error("Authentication required");
+      }
+      
+      const response = await axios.get("http://localhost:5000/api/team/media", {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+      });
+      
+      setMedia(response.data.data);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to fetch media";
+      console.error("Failed to fetch media:", error);
+      alert(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  React.useEffect(() => {
+    getMedia();
+  }, []);
+
+  React.useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && selectedMedia) {
+        setSelectedMedia(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedMedia]);
+
+  if (teamMembersLoading) {
+    return <div className="text-white">Loading team members...</div>;
+  }
+  // const allTeamMembers = teamMembersData?.getOwnTeams?.flatMap(team => team.teamPlayers) || [];
   return (
     <div
       ref={topTeamsRef}
       className="bg-[#0D1117] text-white min-h-screen p-6 flex gap-6"
     >
+      {/* Media Preview Modal */}
+      {selectedMedia && (
+        <div 
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+          onClick={() => setSelectedMedia(null)}
+        >
+          <div 
+            className="relative max-w-4xl w-full bg-[#161B22] rounded-xl overflow-hidden"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="absolute top-4 right-4 flex gap-2 z-10">
+              <button 
+                onClick={() => handleDownload(selectedMedia.media_url)}
+                className="p-2 bg-gray-700 rounded-full hover:bg-gray-600 transition-colors"
+                title="Download"
+              >
+                <Download className="w-5 h-5 text-white" />
+              </button>
+              <button 
+                onClick={() => setSelectedMedia(null)}
+                className="p-2 bg-gray-700 rounded-full hover:bg-gray-600 transition-colors"
+                title="Close"
+              >
+                <X className="w-5 h-5 text-white" />
+              </button>
+            </div>
+            {selectedMedia.type === "video" ? (
+              <video
+                src={selectedMedia.media_url}
+                className="w-full max-h-[80vh] object-contain bg-black"
+                controls
+                autoPlay
+                playsInline
+              />
+            ) : (
+              <img
+                src={selectedMedia.media_url}
+                alt="Selected media"
+                className="w-full max-h-[80vh] object-contain bg-black"
+              />
+            )}
+            <div className="p-4 border-t border-gray-700">
+              <p className="text-gray-300">
+                Uploaded on {new Date(selectedMedia.createdAt).toLocaleDateString()} at{" "}
+                {new Date(selectedMedia.createdAt).toLocaleTimeString()}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Left Sidebar */}
       <div className="w-1/4 flex flex-col gap-6">
         {/* Online Members */}
@@ -161,21 +305,21 @@ export default function Overview() {
             <p className="text-red-500">Error loading members</p>
           ) : (
             <div className="grid grid-cols-2 gap-3">
-              {allTeamMembers.map((member) => (
-                <div key={member.user.id} className="flex flex-col items-center">
-                  <div className="relative">
-                    <img
-                      src={`https://api.dicebear.com/7.x/initials/svg?seed=${member.user.username}`}
-                      alt={member.user.username}
-                      className="w-12 h-12 rounded-full bg-gray-700"
-                    />
-                    <Circle className="absolute bottom-0 right-0 w-3 h-3 text-green-500 fill-green-500" />
-                  </div>
-                  <p className="text-sm mt-1 text-center">{member.user.username}</p>
-                  <p className="text-xs text-gray-400 capitalize">{member.role}</p>
-                </div>
-              ))}
-              {allTeamMembers.length === 0 && (
+              {teamMembersData?.getOwnTeams?.map((team: any) => (
+  <div key={team.user.id} className="flex flex-col items-center">
+    <div className="relative">
+      <img
+        src={`https://api.dicebear.com/7.x/initials/svg?seed=${team.user.username}`}
+        alt={team.user.username}
+        className="w-12 h-12 rounded-full bg-gray-700"
+      />
+      <Circle className="absolute bottom-0 right-0 w-3 h-3 text-green-500 fill-green-500" />
+    </div>
+    <p className="text-sm mt-1 text-center">{team.user.username}</p>
+    <p className="text-xs text-gray-400 capitalize">{team.user.role}</p>
+  </div>
+))}
+              {teamMembersData?.getOwnTeams?.length === 0 && (
                 <p className="text-gray-400 text-sm col-span-2">No team members yet</p>
               )}
             </div>
@@ -229,8 +373,8 @@ export default function Overview() {
           {teamsError && <p className="text-red-500">Error loading teams.</p>}
 
           <div className="mt-4 bg-[#1F2937] ">
-            {teamsData?.getTeams?.length > 0 ? (
-              teamsData.getTeams.map((team: Team) => (
+            {teamsData?.getTeams?.length ?? 0 > 0 ? (
+              teamsData?.getTeams?.map((team: Team) => (
                 <div
                   key={team.id}
                   className="p-4 rounded-xl mb-4 overflow-hidden"
@@ -265,23 +409,68 @@ export default function Overview() {
 
       {/* Recently Added Media */}
       <div className="flex-1">
-        <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold">RECENTLY ADDED MEDIA</h2>
-          <button className="text-orange-500 hover:text-orange-400">
-            View All
-          </button>
-        </div>
-        <p className="text-gray-400 mb-4">All media shared on the chat</p>
-        <div className="grid grid-cols-3 gap-4">
-          {[...Array(6)].map((_, index) => (
-            <div key={index} className="bg-[#1F2937] p-2 rounded-lg">
-              <img
-                src="https://via.placeholder.com/200"
-                alt={`Media ${index + 1}`}
-                className="rounded-lg w-full h-32 object-cover"
-              />
+        <div className="bg-[#161B22] p-6 rounded-lg">
+          <h3 className="text-xl font-bold mb-6">Recently Added Media</h3>
+          {isLoading ? (
+            <div className="flex items-center justify-center h-64">
+              <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
             </div>
-          ))}
+          ) : media.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {media.slice(0, 15).map((item, index) => (
+                <div 
+                  key={item.id || index} 
+                  className="group relative bg-gray-800 rounded-xl overflow-hidden transition-transform hover:scale-[1.02] hover:shadow-xl cursor-pointer"
+                  onClick={() => setSelectedMedia(item)}
+                  onMouseEnter={() => item.type === "video" && setHoveredVideo(item.id)}
+                  onMouseLeave={() => setHoveredVideo(null)}
+                >
+                  {item.type === "video" ? (
+                    <div className="relative w-full h-48">
+                      <video
+                        src={item.media_url}
+                        className="w-full h-full object-cover"
+                        muted
+                        playsInline
+                        loop
+                        preload="metadata"
+                        onMouseEnter={(e) => e.currentTarget.play()}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.pause();
+                          e.currentTarget.currentTime = 0;
+                        }}
+                      />
+                      {hoveredVideo !== item.id && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                          <Play className="w-12 h-12 text-white opacity-75" />
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <img
+                      src={item.media_url}
+                      alt={`Media ${index + 1}`}
+                      className="w-full h-48 object-cover"
+                      loading="lazy"
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="absolute bottom-0 left-0 right-0 p-4">
+                      <p className="text-white text-sm">
+                        {new Date(item.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-64 bg-gray-800 rounded-xl">
+              <Upload className="w-12 h-12 text-gray-400 mb-4" />
+              <p className="text-gray-400 text-lg">No media found</p>
+              <p className="text-gray-500 mt-2">Upload some images or videos to get started</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
