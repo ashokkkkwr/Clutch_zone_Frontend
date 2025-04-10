@@ -1,44 +1,50 @@
-import React, { useRef, useState } from 'react';
-import { useQuery, gql, useMutation } from '@apollo/client';
-import { Trophy, Users, Image as ImageIcon, ChevronDown, Loader2 } from 'lucide-react';
-import Media from '../component/Media';
-import Overview from '../component/Overview';
+import React, { useRef, useState } from "react";
+import { useQuery, gql, useMutation } from "@apollo/client";
+import {
+  Trophy,
+  Users,
+  Image as ImageIcon,
+  ChevronDown,
+  Loader2,
+} from "lucide-react";
+import Media from "../component/Media";
+import Overview from "../component/Overview";
 const GET_OWN_TEAM_DETAILS = gql`
   query GetOwnTeamDetails {
-  getOwnTeamDetails {
-    id
-    team_name
-    logo
-    max_players
-    description
-    wins
-    tournaments_played
-    teamPlayers {
-      role
-      user {
-        email
-        id
-        username
+    getOwnTeamDetails {
+      id
+      team_name
+      logo
+      max_players
+      description
+      wins
+      tournaments_played
+      teamPlayers {
+        role
+        user {
+          email
+          id
+          username
+        }
       }
     }
   }
-}
 `;
 const GET_TEAM_MEMBERS = gql`
-query GetOwnTeams {
-  getOwnTeams {
-    user {
-      id
-      username
+  query GetOwnTeams {
+    getOwnTeams {
+      user {
+        id
+        username
+        role
+        email
+        token
+        bio
+      }
       role
-      email
-      token
-      bio
     }
-    role
   }
-}
-`
+`;
 const JOIN_TEAM = gql`
   mutation SendJoinRequest($teamId: ID!) {
     sendJoinRequest(teamId: $teamId) {
@@ -50,25 +56,31 @@ const JOIN_TEAM = gql`
 `;
 
 export default function UserTeam() {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem("token");
   const authHeaders = { Authorization: `Bearer ${token}` };
   const [sendJoinRequest] = useMutation(JOIN_TEAM);
   const contentRef = useRef<HTMLDivElement>(null);
-   const {
-      data: teamMembersData,
-      loading: teamMembersLoading,
-      error: teamMembersError,
-    } = useQuery(GET_TEAM_MEMBERS, {
-      context: { headers: authHeaders },  
-    });
-  const [activeSection, setActiveSection] = useState<'overview' | 'media' | 'players'>('overview');
+  const {
+    data: teamMembersData,
+    loading: teamMembersLoading,
+    error: teamMembersError,
+  } = useQuery(GET_TEAM_MEMBERS, {
+    context: { headers: authHeaders },
+  });
+  const [activeSection, setActiveSection] = useState<
+    "overview" | "media" | "players"
+  >("overview");
 
   if (!token) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white p-8 flex items-center justify-center">
         <div className="text-center space-y-4 animate-fade-in">
-          <h2 className="text-2xl font-bold text-red-400">Authentication Required</h2>
-          <p className="text-gray-400">Please login to view your team details.</p>
+          <h2 className="text-2xl font-bold text-red-400">
+            Authentication Required
+          </h2>
+          <p className="text-gray-400">
+            Please login to view your team details.
+          </p>
           <button className="px-6 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors duration-300">
             Login Now
           </button>
@@ -77,13 +89,13 @@ export default function UserTeam() {
     );
   }
 
-  const { data, loading,error } = useQuery(GET_OWN_TEAM_DETAILS, {
+  const { data, loading, error } = useQuery(GET_OWN_TEAM_DETAILS, {
     context: { headers: { Authorization: `Bearer ${token}` } },
   });
 
-  const handleSectionChange = (section: 'overview' | 'media' | 'players') => {
+  const handleSectionChange = (section: "overview" | "media" | "players") => {
     setActiveSection(section);
-    contentRef.current?.scrollIntoView({ behavior: 'smooth' });
+    contentRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   if (loading) {
@@ -96,9 +108,8 @@ export default function UserTeam() {
       </div>
     );
   }
-  if(error){
-    console.log("🚀 ~ UserTeam ~ error:", error)
-    
+  if (error) {
+    console.log("🚀 ~ UserTeam ~ error:", error);
   }
 
   const team = data?.getOwnTeamDetails;
@@ -109,20 +120,20 @@ export default function UserTeam() {
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black">
       {/* Hero Section */}
       <div className="relative h-[80vh] w-full overflow-hidden">
-        <img 
-          src="https://images.unsplash.com/photo-1542751371-adc38448a05e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" 
-          alt="Esports Team" 
+        <img
+          src="https://images.unsplash.com/photo-1542751371-adc38448a05e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
+          alt="Esports Team"
           className="h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/60 to-gray-900"></div>
-        
+
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white px-6">
           {team ? (
             <div className="space-y-6 animate-fade-in">
               {team.logo && (
-                <img 
-                  src={team.logo} 
-                  alt="Team Logo" 
+                <img
+                  src={team.logo}
+                  alt="Team Logo"
                   className="w-32 h-32 rounded-full border-4 border-purple-500 shadow-lg shadow-purple-500/50"
                 />
               )}
@@ -130,7 +141,7 @@ export default function UserTeam() {
                 {team.team_name}
               </h1>
               <p className="mt-4 text-lg md:text-2xl max-w-2xl text-gray-300">
-                {team.description || 'No description available.'}
+                {team.description || "No description available."}
               </p>
               <div className="flex gap-4 justify-center">
                 <button className="px-8 py-3 bg-purple-600 hover:bg-purple-700 text-lg font-bold rounded-lg transition-all duration-300 flex items-center gap-2 group">
@@ -160,7 +171,7 @@ export default function UserTeam() {
             </div>
           )}
         </div>
-        
+
         <div className="absolute bottom-0 left-0 right-0 flex justify-center pb-8">
           <ChevronDown className="w-8 h-8 text-white animate-bounce" />
         </div>
@@ -172,33 +183,33 @@ export default function UserTeam() {
           <div className="flex justify-center items-center p-4 gap-8">
             <button
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 ${
-                activeSection === 'overview' 
-                  ? 'bg-purple-600 text-white' 
-                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                activeSection === "overview"
+                  ? "bg-purple-600 text-white"
+                  : "text-gray-400 hover:text-white hover:bg-gray-800"
               }`}
-              onClick={() => handleSectionChange('overview')}
+              onClick={() => handleSectionChange("overview")}
             >
               <Trophy className="w-5 h-5" />
               <span className="font-medium">Overview</span>
             </button>
             <button
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 ${
-                activeSection === 'media' 
-                  ? 'bg-purple-600 text-white' 
-                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                activeSection === "media"
+                  ? "bg-purple-600 text-white"
+                  : "text-gray-400 hover:text-white hover:bg-gray-800"
               }`}
-              onClick={() => handleSectionChange('media')}
+              onClick={() => handleSectionChange("media")}
             >
               <ImageIcon className="w-5 h-5" />
               <span className="font-medium">Media</span>
             </button>
             <button
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 ${
-                activeSection === 'players' 
-                  ? 'bg-purple-600 text-white' 
-                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                activeSection === "players"
+                  ? "bg-purple-600 text-white"
+                  : "text-gray-400 hover:text-white hover:bg-gray-800"
               }`}
-              onClick={() => handleSectionChange('players')}
+              onClick={() => handleSectionChange("players")}
             >
               <Users className="w-5 h-5" />
               <span className="font-medium">Players</span>
@@ -210,26 +221,40 @@ export default function UserTeam() {
       {/* Content Section */}
       <div ref={contentRef} className="max-w-7xl mx-auto p-8">
         <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-6">
-          {activeSection === 'overview' && <Overview />}
-          {activeSection === 'media' && <Media />}
-          {activeSection === 'players' && (
-  <div>
-    <h2 className="text-2xl font-bold text-white mb-6">Team Members</h2>
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-      {teamMembersData?.getOwnTeams?.map((member:any, index:any) => (
-        <div key={member.user.id || index} className="bg-gray-900 rounded-lg p-4 shadow-md border border-gray-700">
-          <h3 className="text-lg font-semibold text-purple-400">{member.user.username}</h3>
-          <p className="text-gray-300 text-sm">{member.user.email}</p>
-          <p className="text-gray-400 text-sm mt-2 italic">{member.role}</p>
-          {member.user.bio && (
-            <p className="text-gray-500 text-xs mt-2">{member.user.bio}</p>
+          {activeSection === "overview" && <Overview />}
+          {activeSection === "media" && <Media />}
+          {activeSection === "players" && (
+            <div>
+              <h2 className="text-2xl font-bold text-white mb-6">
+                Team Members
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                {teamMembersData?.getOwnTeams?.map(
+                  (member: any, index: any) => (
+                    <div
+                      key={member.user.id || index}
+                      className="bg-gray-900 rounded-lg p-4 shadow-md border border-gray-700"
+                    >
+                      <h3 className="text-lg font-semibold text-purple-400">
+                        {member.user.username}
+                      </h3>
+                      <p className="text-gray-300 text-sm">
+                        {member.user.email}
+                      </p>
+                      <p className="text-gray-400 text-sm mt-2 italic">
+                        {member.role}
+                      </p>
+                      {member.user.bio && (
+                        <p className="text-gray-500 text-xs mt-2">
+                          {member.user.bio}
+                        </p>
+                      )}
+                    </div>
+                  )
+                )}
+              </div>
+            </div>
           )}
-        </div>
-      ))}
-    </div>
-  </div>
-)}
-
         </div>
       </div>
     </div>
