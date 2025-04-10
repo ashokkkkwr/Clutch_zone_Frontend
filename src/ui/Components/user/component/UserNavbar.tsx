@@ -116,7 +116,7 @@ export default function UserNavbar() {
               <Trophy className="w-4 h-4" />
               <span>{userNavbarLabel.tournament[lang]}</span>
             </NavLink>
-            <NavLink to="/Leaderboard" className={({ isActive }) => (isActive ? activeLinkClass : defaultLinkClass)}>
+            <NavLink to="/user/leader-board" className={({ isActive }) => (isActive ? activeLinkClass : defaultLinkClass)}>
               <Users className="w-4 h-4" />
               <span>{userNavbarLabel.Leaderboard[lang]}</span>
             </NavLink>
