@@ -19,6 +19,4 @@ createRoot(document.getElementById('root')!).render(
     <App />
     </LanguageState>
     </ApolloProvider>
-
-
 )

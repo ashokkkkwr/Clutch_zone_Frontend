@@ -25,7 +25,7 @@ const FETCH_TOURNAMENT = gql`
       id
       game_name
       game_cover_image
-      game_icon_image
+      game_icon
     }
     prize_pools {
       id

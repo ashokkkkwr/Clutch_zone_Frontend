@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { useQuery, gql, useMutation } from "@apollo/client";
+import { useQuery, gql, useMutation,useApolloClient } from "@apollo/client";
 import {
   Trophy,
   Users,
@@ -9,6 +9,12 @@ import {
 } from "lucide-react";
 import Media from "../component/Media";
 import Overview from "../component/Overview";
+import axios from "axios";
+import { jwtDecode } from "jwt-decode";
+import { Menu } from "@headlessui/react";
+import { MoreVertical } from "lucide-react";
+import toast from "react-hot-toast";
+
 const GET_OWN_TEAM_DETAILS = gql`
   query GetOwnTeamDetails {
     getOwnTeamDetails {
@@ -45,6 +51,7 @@ const GET_TEAM_MEMBERS = gql`
     }
   }
 `;
+
 const JOIN_TEAM = gql`
   mutation SendJoinRequest($teamId: ID!) {
     sendJoinRequest(teamId: $teamId) {
@@ -55,11 +62,30 @@ const JOIN_TEAM = gql`
   }
 `;
 
+const LEAVE_TEAM = gql`
+  mutation LeaveTeam($teamId: ID!) {
+    leaveTeam(teamId: $teamId) {
+      success
+      message
+    }
+  }
+`;
+
 export default function UserTeam() {
+    const client = useApolloClient();
+
   const token = localStorage.getItem("token");
   const authHeaders = { Authorization: `Bearer ${token}` };
-  const [sendJoinRequest] = useMutation(JOIN_TEAM);
-  const contentRef = useRef<HTMLDivElement>(null);
+  const [sendJoinRequest, { loading: joinLoading }] = useMutation(JOIN_TEAM, {
+    context: { headers: authHeaders },
+    refetchQueries: [{ query: GET_OWN_TEAM_DETAILS }, { query: GET_TEAM_MEMBERS }],
+  });
+  const [leaveTeam, { loading: leaveLoading }] = useMutation(LEAVE_TEAM, {
+    context: { headers: authHeaders },
+    refetchQueries: [{ query: GET_OWN_TEAM_DETAILS }, { query: GET_TEAM_MEMBERS }],
+  });
+
+  const contentRef = useRef(null);
   const {
     data: teamMembersData,
     loading: teamMembersLoading,
@@ -67,9 +93,9 @@ export default function UserTeam() {
   } = useQuery(GET_TEAM_MEMBERS, {
     context: { headers: authHeaders },
   });
-  const [activeSection, setActiveSection] = useState<
-    "overview" | "media" | "players"
-  >("overview");
+  const [activeSection, setActiveSection] = useState(
+    "overview"
+  );
 
   if (!token) {
     return (
@@ -90,12 +116,40 @@ export default function UserTeam() {
   }
 
   const { data, loading, error } = useQuery(GET_OWN_TEAM_DETAILS, {
-    context: { headers: { Authorization: `Bearer ${token}` } },
+    context: { headers: authHeaders },
   });
 
-  const handleSectionChange = (section: "overview" | "media" | "players") => {
+  const handleSectionChange = (section) => {
     setActiveSection(section);
     contentRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const team = data?.getOwnTeamDetails;
+
+  const handleJoin = () => {
+    if (!team) {
+      // send join request to some team? perhaps selecting from list
+      // here placeholder: using first team id if needed. Adjust per your flow.
+      // sendJoinRequest({ variables: { teamId: /* desired ID */ } });
+      sendJoinRequest({ variables: { teamId: "" } });
+    }
+  };
+
+  const handleLeave =async () => {
+    try{
+ const response= await axios.post('http://localhost:5000/api/team/leave-team',{},{
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  toast.success('Successfully left the team!');
+    console.log('Leave team response:', response.data);
+    }catch(error){
+      console.error('Error leaving team:', error);
+      toast.error('Error leaving team');
+    }
+  
+   
   };
 
   if (loading) {
@@ -108,20 +162,128 @@ export default function UserTeam() {
       </div>
     );
   }
-  if (error) {
-    console.log("🚀 ~ UserTeam ~ error:", error);
-  }
+  if (error) console.log("🚀 ~ UserTeam ~ error:", error);
 
-  const team = data?.getOwnTeamDetails;
   if (teamMembersLoading) {
     return <div className="text-white">Loading team members...</div>;
   }
+  // const token = localStorage.getItem("token");
+  const currentUserId = token ? jwtDecode(token).id : null;
+  const you = teamMembersData?.getOwnTeams?.find(m => m.user.id === currentUserId);
+  const amILeader = you?.role === "TEAM_LEADER";
+
+
+
+  const kickMember = async (teamId:any, memberId:any) => {
+    try {
+      const response = await axios.post(
+        `http://localhost:5000/api/team/remove-member`,
+        { teamId,memberId },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      toast.success('Member kicked successfully!');
+       const existingTeamData = client.readQuery({ query: GET_OWN_TEAM_DETAILS });
+      if (existingTeamData) {
+        const updatedTeamPlayers = existingTeamData.getOwnTeamDetails.teamPlayers.filter(
+          (player) => player.user.id !== memberId
+        );
+        client.writeQuery({
+          query: GET_OWN_TEAM_DETAILS,
+          data: {
+            getOwnTeamDetails: {
+              ...existingTeamData.getOwnTeamDetails,
+              teamPlayers: updatedTeamPlayers,
+            },
+          },
+        });
+      }
+
+      // Update GET_TEAM_MEMBERS cache
+      const existingMembersData = client.readQuery({ query: GET_TEAM_MEMBERS });
+      if (existingMembersData) {
+        const updatedMembers = existingMembersData.getOwnTeams.filter(
+          (member) => member.user.id !== memberId
+        );
+        client.writeQuery({
+          query: GET_TEAM_MEMBERS,
+          data: { getOwnTeams: updatedMembers },
+        });
+      }
+
+      console.log("Kick member response:", response.data);
+    } catch (error) {
+      console.error("Error kicking member:", error);
+    }
+  };
+  const promoteLeader = async (teamId:any, newLeaderId:any) => {
+    try {
+      const response = await axios.post(
+        `http://localhost:5000/api/team/change-team-leader`,
+        { teamId,newLeaderId },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+// Update GET_OWN_TEAM_DETAILS cache
+      const existingTeamData = client.readQuery({ query: GET_OWN_TEAM_DETAILS });
+      if (existingTeamData) {
+        const updatedTeamPlayers = existingTeamData.getOwnTeamDetails.teamPlayers.map((player) => {
+          if (player.role === "TEAM_LEADER") {
+            return { ...player, role: "MEMBER" };
+          }
+          if (player.user.id === newLeaderId) {
+            return { ...player, role: "TEAM_LEADER" };
+          }
+          return player;
+        });
+        
+        client.writeQuery({
+          query: GET_OWN_TEAM_DETAILS,
+          data: {
+            getOwnTeamDetails: {
+              ...existingTeamData.getOwnTeamDetails,
+              teamPlayers: updatedTeamPlayers,
+            },
+          },
+        });
+      }
+
+      // Update GET_TEAM_MEMBERS cache
+      const existingMembersData = client.readQuery({ query: GET_TEAM_MEMBERS });
+      if (existingMembersData) {
+        const updatedMembers = existingMembersData.getOwnTeams.map((member) => {
+          if (member.role === "TEAM_LEADER") {
+            return { ...member, role: "MEMBER" };
+          }
+          if (member.user.id === newLeaderId) {
+            return { ...member, role: "TEAM_LEADER" };
+          }
+          return member;
+        });
+
+        client.writeQuery({
+          query: GET_TEAM_MEMBERS,
+          data: { getOwnTeams: updatedMembers },
+        });
+      }
+
+      toast.success('Leader changed successfully!');
+    
+    } catch (error) {
+ toast.error('Failed to change leader');    }
+  };
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black">
       {/* Hero Section */}
       <div className="relative h-[80vh] w-full overflow-hidden">
         <img
-          src="https://images.unsplash.com/photo-1542751371-adc38448a05e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
+          src="https://images.unsplash.com/photo-1542751371-adc38448a05e"
           alt="Esports Team"
           className="h-full w-full object-cover"
         />
@@ -144,9 +306,13 @@ export default function UserTeam() {
                 {team.description || "No description available."}
               </p>
               <div className="flex gap-4 justify-center">
-                <button className="px-8 py-3 bg-purple-600 hover:bg-purple-700 text-lg font-bold rounded-lg transition-all duration-300 flex items-center gap-2 group">
-                  <Users className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                  Join The Squad
+                <button
+                  onClick={handleLeave}
+                  disabled={leaveLoading}
+                  className="px-8 py-3 bg-red-600 hover:bg-red-700 text-lg font-bold rounded-lg transition-all duration-300 flex items-center gap-2"
+                >
+                  <Users className="w-5 h-5" />
+                  {leaveLoading ? 'Leaving...' : 'Leave Team'}
                 </button>
                 <button className="px-8 py-3 bg-gray-800/50 hover:bg-gray-800 text-lg font-bold rounded-lg border border-gray-700 transition-all duration-300 flex items-center gap-2">
                   View Roster
@@ -164,9 +330,13 @@ export default function UserTeam() {
               <p className="mt-4 text-lg md:text-2xl max-w-2xl text-gray-400">
                 Discover and join top teams to start competing!
               </p>
-              <button className="px-8 py-3 bg-purple-600 hover:bg-purple-700 text-lg font-bold rounded-lg transition-all duration-300 flex items-center gap-2 group">
-                <Trophy className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                Browse Teams
+              <button
+                onClick={handleJoin}
+                disabled={joinLoading}
+                className="px-8 py-3 bg-purple-600 hover:bg-purple-700 text-lg font-bold rounded-lg transition-all duration-300 flex items-center gap-2"
+              >
+                <Trophy className="w-5 h-5" />
+                {joinLoading ? 'Joining...' : 'Join The Squad'}
               </button>
             </div>
           )}
@@ -224,37 +394,64 @@ export default function UserTeam() {
           {activeSection === "overview" && <Overview />}
           {activeSection === "media" && <Media />}
           {activeSection === "players" && (
-            <div>
-              <h2 className="text-2xl font-bold text-white mb-6">
-                Team Members
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                {teamMembersData?.getOwnTeams?.map(
-                  (member: any, index: any) => (
-                    <div
-                      key={member.user.id || index}
-                      className="bg-gray-900 rounded-lg p-4 shadow-md border border-gray-700"
-                    >
-                      <h3 className="text-lg font-semibold text-purple-400">
-                        {member.user.username}
-                      </h3>
-                      <p className="text-gray-300 text-sm">
-                        {member.user.email}
-                      </p>
-                      <p className="text-gray-400 text-sm mt-2 italic">
-                        {member.role}
-                      </p>
-                      {member.user.bio && (
-                        <p className="text-gray-500 text-xs mt-2">
-                          {member.user.bio}
-                        </p>
+      <div>
+        <h2 className="text-2xl font-bold text-white mb-6">Team Members</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          {teamMembersData?.getOwnTeams.map((member) => (
+            <div key={member.user.id}
+                 className="relative bg-gray-900 rounded-lg p-4 shadow-md border border-gray-700">
+              <h3 className="text-lg font-semibold text-purple-400">
+                {member.user.username}
+              </h3>
+              <p className="text-gray-300 text-sm">{member.user.email}</p>
+              <p className="text-gray-400 text-sm mt-2 italic">{member.role}</p>
+              {member.user.bio && (
+                <p className="text-gray-500 text-xs mt-2">{member.user.bio}</p>
+              )}
+
+              {/* 3. Only if *you* are leader and this isn’t you… */}
+              {amILeader && member.user.id !== currentUserId && (
+                <Menu as="div" className="absolute top-2 right-2 text-left">
+                  <Menu.Button className="p-1 hover:bg-gray-800 rounded-full">
+                    <MoreVertical className="w-5 h-5 text-gray-400 hover:text-white" />
+                  </Menu.Button>
+                  <Menu.Items className="mt-1 origin-top-right absolute right-0 w-36 bg-gray-800 border border-gray-700 rounded-md shadow-lg focus:outline-none z-10">
+                    <Menu.Item>
+                      {({ active }) => (
+                        <button
+                          onClick={() =>
+                            kickMember( team.id, member.user.id)
+                          }
+                          className={`${
+                            active ? "bg-gray-700" : ""
+                          } block w-full text-left px-4 py-2 text-sm`}
+                        >
+                          Kick out
+                        </button>
                       )}
-                    </div>
-                  )
-                )}
-              </div>
+                    </Menu.Item>
+                    <Menu.Item>
+                      {({ active }) => (
+                        <button
+                          onClick={() =>
+                            promoteLeader(  team.id, member.user.id)
+                          }
+                          className={`${
+                            active ? "bg-gray-700" : ""
+                          } block w-full text-left px-4 py-2 text-sm`}
+                        >
+                          Make team leader
+                        </button>
+                      )}
+                    </Menu.Item>
+                  </Menu.Items>
+                </Menu>
+              )}
             </div>
-          )}
+          ))}
+        </div>
+      </div>
+    )}
         </div>
       </div>
     </div>

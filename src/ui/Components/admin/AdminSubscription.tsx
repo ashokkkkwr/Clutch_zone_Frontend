@@ -41,6 +41,28 @@ export default function AdminSubscription() {
   } = useForm<FormValues>();
 
   const imageFile = watch('image');
+  useEffect(() => {
+    if (selectedPackage !== null && data) {
+      const pkg = data.getClutchBucks[selectedPackage];
+      reset({
+        amount: pkg.amount,
+        price: pkg.price,
+        description: pkg.description,
+        bonus: pkg.bonus,
+        image: null,
+      });
+      setSuccessMessage('');
+      setErrorMessage('');
+    } else {
+      reset({
+        amount: 0,
+        price: 0,
+        description: '',
+        bonus: 0,
+        image: null,
+      });
+    }
+  }, [selectedPackage, data, reset]);
 
   const onSubmit = async (formData: FormValues) => {
     setIsSubmitting(true);
@@ -49,37 +71,54 @@ export default function AdminSubscription() {
     submitData.append('price', formData.price.toString());
     submitData.append('description', formData.description);
     submitData.append('bonus', formData.bonus.toString());
-    
     if (formData.image && formData.image[0]) {
       submitData.append('image', formData.image[0]);
     }
 
     try {
-      const response = await axios.post(
-        'http://localhost:5000/api/payment/create',
-        submitData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          }
-        }
-      );
+      let response;
+      const token = localStorage.getItem('token') ?? '';
+      const config = {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      if (selectedPackage === null) {
+        // CREATE
+        response = await axios.post(
+          'http://localhost:5000/api/payment/create',
+          submitData,
+          config
+        );
+      } else {
+        // UPDATE
+        const pkgId = data.getClutchBucks[selectedPackage].id;
+        response = await axios.patch(
+          `http://localhost:5000/api/payment/update/${pkgId}`,
+          submitData,
+          config
+        );
+      }
+
       setSuccessMessage(response.data.message);
-      setErrorMessage("");
+      setErrorMessage('');
+      // reset form & selection
       reset();
       setSelectedPackage(null);
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error) && error.response) {
-        setErrorMessage(error.response.data.message || "Failed to create package");
-      } else {
-        setErrorMessage("Failed to create package");
-      }
-      setSuccessMessage("");
+    } catch (err: unknown) {
+      const msg =
+        axios.isAxiosError(err) && err.response?.data?.message
+          ? err.response.data.message
+          : 'Operation failed';
+      setErrorMessage(msg);
+      setSuccessMessage('');
     } finally {
       setIsSubmitting(false);
     }
   };
+
 
   if (loading) {
     return (
@@ -208,7 +247,7 @@ export default function AdminSubscription() {
 
             <div>
               <label className="block text-sm font-medium text-zinc-400 mb-2">
-                Price (USD)
+                Price (NRS)
               </label>
               <input
                 type="number"

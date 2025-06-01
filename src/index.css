@@ -7,6 +7,42 @@
 
 body{
     color:white;
-    background-color: #160F0F;
+    background-color: #001219;
     font-family: 'Poppins', sans-serif;
 }
+
+
+@layer utilities {
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 8px;
+    }
+  
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: rgba(31, 41, 55, 0.5);
+      border-radius: 4px;
+    }
+  
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(139, 92, 246, 0.5);
+      border-radius: 4px;
+    }
+  
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: rgba(139, 92, 246, 0.7);
+    }
+  
+    .animate-fade-in {
+      animation: fadeIn 0.3s ease-out;
+    }
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }

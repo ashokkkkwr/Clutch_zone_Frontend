@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { gql, useQuery } from "@apollo/client";
 import { useNavigate } from "react-router-dom";
 import { Trophy, Clock, Users, Loader2, GamepadIcon, DollarSign, ChevronRight, AlertCircle } from "lucide-react";
@@ -22,7 +22,7 @@ const FETCH_TOURNAMENT = gql`
       id
       game_name
       game_cover_image
-      game_icon_image
+      game_icon
     }
   }
 }
@@ -68,73 +68,145 @@ export default function myTournament() {
 
   const tournaments = data?.getMyTournament || [];
   const hasTournaments = tournaments.length > 0;
+
+  function CountdownTimer({
+    startDate,
+    endDate,
+  }: {
+    startDate: string;
+    endDate: string;
+  }) {
+    const calc = () => {
+      const now = Date.now();
+      const start = new Date(startDate).getTime();
+      const end = new Date(endDate).getTime();
+  
+      if (now < start) {
+        const diff = start - now;
+        return { label: "Opens in", diff };
+      }
+      if (now <= end) {
+        const diff = end - now;
+        return { label: "Closes in", diff };
+      }
+      return null;
+    };
+  
+    const [state, setState] = useState<{ label: string; diff: number } | null>(
+      calc()
+    );
+  
+    useEffect(() => {
+      const id = setInterval(() => setState(calc()), 1000);
+      return () => clearInterval(id);
+    }, [startDate, endDate]);
+  
+    if (!state) return <span className="text-red-400">Registration ended</span>;
+  
+    const { label, diff } = state;
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+    const minutes = Math.floor((diff / (1000 * 60)) % 60);
+    const seconds = Math.floor((diff / 1000) % 60);
+  
+    return (
+      <span className="text-gray-300 text-sm">
+        {label}:{" "}
+        {days > 0 && `${days}d `}{hours}h {minutes}m {seconds}s
+      </span>
+    );
+  }
   return (
     <div>
               {/* Tournament Grid */}
               {hasTournaments ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {tournaments.slice(0, 6).map((tournament: any) => (
-              <div
-                key={tournament.id}
-                className="group bg-gray-800/50 rounded-xl border border-gray-700 overflow-hidden hover:border-pink-500/50 transition-all duration-300 transform hover:scale-[1.02]"
-                onClick={() => navigate(`/user/tournament-details/${tournament.id}`)}
-              >
-                {/* Tournament Image */}
-                <div className="relative h-48 overflow-hidden">
-                  <img
-                    src={tournament.tournament_cover || "https://images.unsplash.com/photo-1542751371-adc38448a05e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"}
-                    alt={tournament.tournament_name}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/20 to-transparent" />
-                </div>
+       {tournaments.slice(0, 6).map((tournament: any) => {
+  const now = Date.now();
+  const start = new Date(tournament.tournament_registration_start_date).getTime();
+  const end   = new Date(tournament.tournament_registration_end_date).getTime();
+  const isOpen = now >= start && now <= end;
 
-                {/* Tournament Info */}
-                <div className="p-6 space-y-4">
-                  <div className="flex justify-between items-start">
-                    <h2 className="text-xl font-bold text-pink-400 group-hover:text-pink-300 transition-colors">
-                      {tournament.tournament_name}
-                    </h2>
-                    <div className="flex items-center gap-1 bg-gray-900/80 px-3 py-1 rounded-full">
-                      <DollarSign className="w-4 h-4 text-green-400" />
-                      <span className="text-green-400 font-medium">{tournament.tournament_entry_fee}</span>
-                    </div>
-                  </div>
+  return (
+    <div
+      key={tournament.id}
+      className="group bg-gray-800/50 rounded-xl border border-gray-700 overflow-hidden hover:border-pink-500/50 transition-all duration-300 transform hover:scale-[1.02]"
+      onClick={() => navigate(`/user/tournament-details/${tournament.id}`)}
+    >
+      {/* COVER IMAGE */}
+      <div className="relative h-48 overflow-hidden">
+        <img
+          src={
+            tournament.tournament_cover ||
+            "https://images.unsplash.com/photo-1542751371-adc38448a05e"
+          }
+          alt={tournament.tournament_name}
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/20 to-transparent" />
+      </div>
 
-                  <p className="text-gray-400 line-clamp-2">
-                    {tournament.tournament_description}
-                  </p>
+      {/* CARD BODY */}
+      <div className="p-6 space-y-4">
+        <div className="flex justify-between items-start">
+          <h2 className="text-xl font-bold text-pink-400 group-hover:text-pink-300 transition-colors">
+            {tournament.tournament_name}
+          </h2>
+          <div className="flex items-center gap-1 bg-gray-900/80 px-3 py-1 rounded-full">
+            <DollarSign className="w-4 h-4 text-green-400" />
+            <span className="text-green-400 font-medium">
+              {tournament.tournament_entry_fee}
+            </span>
+          </div>
+        </div>
 
-                  <div className="flex items-center gap-2 text-sm text-gray-400">
-                    <Clock className="w-4 h-4" />
-                    <span>Starts: {new Date(tournament.tournament_registration_start_date).toLocaleDateString()}</span>
-                  </div>
+        <p className="text-gray-400 line-clamp-2">
+          {tournament.tournament_description}
+        </p>
 
-                  <div className="flex gap-3 pt-2">
-                    <button
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-pink-600 hover:bg-pink-700 rounded-lg transition-colors"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        console.log("Register Clicked");
-                      }}
-                    >
-                      <Users className="w-4 h-4" />
-                      Register Now
-                    </button>
-                    <button
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/user/tournament-details/${tournament.id}`);
-                      }}
-                    >
-                      <Trophy className="w-4 h-4" />
-                      View Details
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
+        <div className="flex items-center gap-2 text-sm text-gray-400">
+          <Clock className="w-4 h-4" />
+          <CountdownTimer
+            startDate={tournament.tournament_registration_start_date}
+            endDate={tournament.tournament_registration_end_date}
+          />
+        </div>
+
+        <div className="flex gap-3 pt-2">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              // your register handler here
+            }}
+            disabled={!isOpen}
+            title={!isOpen ? "Registration closed" : "Register Now"}
+            className={`
+              flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors
+              ${isOpen
+                ? "bg-pink-600 hover:bg-pink-700 text-white"
+                : "bg-gray-700 text-gray-400 cursor-not-allowed opacity-50"}
+            `}
+          >
+            <Users className="w-4 h-4" />
+            Register Now
+          </button>
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/user/tournament-details/${tournament.id}`);
+            }}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors text-white"
+          >
+            <Trophy className="w-4 h-4" />
+            View Details
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+})}
+
           </div>
         ) : (
           <div className="min-h-[400px] flex flex-col items-center justify-center text-center space-y-6 bg-gray-800/20 rounded-2xl border-2 border-dashed border-gray-700 px-4">

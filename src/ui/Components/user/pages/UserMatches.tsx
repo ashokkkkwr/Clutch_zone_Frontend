@@ -10,7 +10,9 @@ import {
   Gamepad2,
   X,
   Upload,
+  AlertTriangle,
 } from "lucide-react";
+import toast from "react-hot-toast";
 
 interface Player {
   id: number;
@@ -30,6 +32,7 @@ interface Player {
   current_level: number;
   otpExpiration: string;
 }
+
 interface ScoreSubmissionPopupProps {
   onClose: () => void;
   onSubmit: (data: ScoreFormData & { totalScore: number }) => void;
@@ -99,6 +102,37 @@ interface ScoreFormData {
   opponentScore: number;
   screenshot: File | null;
 }
+
+// CountdownTimer Component
+function CountdownTimer({ targetTime }: { targetTime: string }) {
+  const [timeLeft, setTimeLeft] = useState<number>(
+    new Date(targetTime).getTime() - Date.now()
+  );
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const diff = new Date(targetTime).getTime() - Date.now();
+      setTimeLeft(diff);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [targetTime]);
+
+  if (timeLeft <= 0) {
+    return <span className="text-purple-500 ">Over</span>;
+  }
+
+  const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+return (
+  <span>
+    {days} days {hours} hours {minutes} minutes {seconds} seconds
+  </span>
+);
+}
+
 function ScoreSubmissionPopup({
   onClose,
   onSubmit,
@@ -132,15 +166,7 @@ function ScoreSubmissionPopup({
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      if (!e.target.files[0]) {
-        return (
-          <>
-            <p> Pleaase select the image</p>
-          </>
-        );
-      } else {
-        setFormData((prev) => ({ ...prev, screenshot: e.target.files[0] }));
-      }
+      setFormData((prev) => ({ ...prev, screenshot: e.target.files[0] }));
     }
   };
 
@@ -256,7 +282,6 @@ function ScoreSubmissionPopup({
             onClick={() => onSubmit({ ...formData, totalScore })}
             className="w-full bg-yellow-500 text-black font-bold py-3 px-4 rounded-lg hover:bg-yellow-400 transition-colors mt-6"
           >
-            {/** The button text may change based on context */}
             Submit Score
           </button>
         </div>
@@ -264,23 +289,27 @@ function ScoreSubmissionPopup({
     </div>
   );
 }
+
 function MatchCard({ match }: { match: Match }) {
   const isPointsBased = match.tournament.is_points_based;
   const [showForm, setShowForm] = useState(false);
   const [canSubmitScore, setCanSubmitScore] = useState(false);
+
+  // Calculate whether current time is past the match time.
+  const matchTimeMs = new Date(match.match_time).getTime();
+  const now = Date.now();
+  const isTimeOver = matchTimeMs <= now;
+
   useEffect(() => {
-    const matchTime = new Date(match.match_time).getTime();
-    const now = Date.now();
-    // Adjust the time window as needed
-    const submissionStart = matchTime + 1 * 60 * 1000;
-    const submissionEnd = matchTime + 2000 * 60 * 60 * 1000;
+    const submissionStart = matchTimeMs + 1 * 60 * 1000;
+    const submissionEnd = matchTimeMs + 2000 * 60 * 60 * 1000;
 
     if (now >= submissionStart && now <= submissionEnd) {
       setCanSubmitScore(true);
     } else {
       setCanSubmitScore(false);
     }
-  }, [match.match_time]);
+  }, [match.match_time, matchTimeMs, now]);
 
   const handleScoreSubmit = async (
     data: ScoreFormData & { totalScore: number }
@@ -301,7 +330,6 @@ function MatchCard({ match }: { match: Match }) {
       const token = localStorage.getItem("token");
       const url = `http://localhost:5000/api/scoreSubmission/create/${match.id}`;
 
-      // If a score has already been submitted, use PATCH; otherwise, use POST
       if (match.scoreSubmitted) {
         await axios.patch(url, formData, {
           headers: {
@@ -317,20 +345,19 @@ function MatchCard({ match }: { match: Match }) {
           },
         });
       }
-
+toast.success(
+        "Score submitted successfully!",
+);
       setShowForm(false);
-      // Optionally, refresh match data here
     } catch (error) {
       console.error("Failed to submit score:", error);
-      // Handle error appropriately (e.g., show an error message)
     }
   };
 
-  // Determine participant for points-based matches
+  // Determine participant type.
   const isTeam = ["duo", "squad"].includes(
     match.tournament.tournament_game_mode.toLowerCase()
   );
-  console.log("🚀 ~ MatchCard ~ isTeam:", isTeam);
 
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-lg shadow-lg hover:shadow-xl hover:border-zinc-700 transition-all duration-300 overflow-hidden">
@@ -356,18 +383,24 @@ function MatchCard({ match }: { match: Match }) {
         </div>
 
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center space-x-2">
               <Calendar className="w-4 h-4 text-zinc-500" />
-              <span>
+              {/* <span>
                 {new Date(match.match_time).toLocaleDateString("en-US")}
-              </span>
-              <span>{match.match_time}</span>
+              </span> */}
+              <CountdownTimer targetTime={match.match_time} />
             </div>
-            <div className="flex items-center space-x-2">
-              <Gamepad2 className="w-4 h-4 text-zinc-500" />
-              <span className="text-sm text-zinc-400">Round {match.round}</span>
-            </div>
+            {isTimeOver && !match.scoreSubmitted && (
+              <div className="mt-2 sm:mt-0 bg-red-950/30 border border-red-900/50 rounded-lg px-4 py-2 animate-pulse">
+                <div className="flex items-center space-x-2">
+                  <AlertTriangle className="w-4 h-4 text-red-400" />
+                  <span className="text-red-400 font-medium text-sm">
+                    Submit your score to avoid disqualification
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           {isPointsBased ? (
@@ -407,29 +440,20 @@ function MatchCard({ match }: { match: Match }) {
                   <User className="w-6 h-6 text-zinc-300" />
                 </div>
                 <div>
-                  {/* Player 1 */}
                   <p className="font-bold text-white">
-                  {isTeam
+                    {isTeam
                       ? match.team1?.team_name || "TBD"
                       : match.player1?.username || "TBD"}
-
-
-                    {/* {match.player1?.username || "TBD"} */}
                   </p>
-                  {
-                    isTeam ? (
-                      <p className="text-sm text-zinc-400">
-                        Score: {match.team1Score ?? "0"}
-                      </p>
-                    ) : (
-                      <p className="text-sm text-zinc-400">
-                        Score: {match.player1Score ?? "0"}
-                      </p>
-                    )
-                  }
-                  {/* <p className="text-sm text-zinc-400">
-                    Score: {match.player1Score ?? "0"}
-                  </p> */}
+                  {isTeam ? (
+                    <p className="text-sm text-zinc-400">
+                      Score: {match.team1Score ?? "0"}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-zinc-400">
+                      Score: {match.player1Score ?? "0"}
+                    </p>
+                  )}
                 </div>
               </div>
               <div className="px-4 py-2 rounded-full bg-zinc-700 text-white text-sm font-bold border border-zinc-600">
@@ -437,28 +461,20 @@ function MatchCard({ match }: { match: Match }) {
               </div>
               <div className="flex items-center space-x-4">
                 <div>
-                <p className="font-bold text-white">
-                  {isTeam
+                  <p className="font-bold text-white">
+                    {isTeam
                       ? match.team2?.team_name || "TBD"
                       : match.player2?.username || "TBD"}
-
-
-                    {/* {match.player1?.username || "TBD"} */}
                   </p>
-                  {
-                    isTeam?(
-                      <p className="text-sm text-zinc-400">
-                        Score: {match.team2Score ?? "0"}
-                      </p>
-                    ):(
-                      <p className="text-sm text-zinc-400">
-                        Score: {match.player2Score ?? "0"}
-                      </p>
-                    )
-                  }
-                  {/* <p className="text-sm text-zinc-400 text-right">
-                    Score: {match.player2Score ?? "0"}
-                  </p> */}
+                  {isTeam ? (
+                    <p className="text-sm text-zinc-400">
+                      Score: {match.team2Score ?? "0"}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-zinc-400">
+                      Score: {match.player2Score ?? "0"}
+                    </p>
+                  )}
                 </div>
                 <div className="w-12 h-12 rounded-full bg-zinc-700 flex items-center justify-center ring-2 ring-zinc-600">
                   <User className="w-6 h-6 text-zinc-300" />
@@ -513,7 +529,7 @@ export default function UserMatches() {
           },
         }
       );
-      console.log("🚀 ~ getMatches ~ response:", response)
+      console.log("Retrieved matches:", response);
       setMatches(response.data);
     } catch (err) {
       setError("Failed to load matches");
@@ -547,6 +563,14 @@ export default function UserMatches() {
     );
   }
 
+  // Separate matches into past and ongoing based on status.
+  const pastMatches = matches.filter(
+    (match) => match.status.toLowerCase() === "completed"
+  );
+  const ongoingMatches = matches.filter(
+    (match) => match.status.toLowerCase() !== "completed"
+  );
+
   return (
     <div className="min-h-screen bg-black py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
@@ -560,16 +584,37 @@ export default function UserMatches() {
             <span className="text-zinc-400">{matches.length} Matches</span>
           </div>
         </div>
-        <div className="space-y-6">
-          {matches.length === 0 ? (
-            <div className="text-center py-16 bg-zinc-900 rounded-xl border border-zinc-800">
-              <Gamepad2 className="w-16 h-16 text-zinc-700 mx-auto mb-4" />
-              <p className="text-zinc-400 text-lg">No matches found</p>
+
+        {ongoingMatches.length > 0 && (
+          <div className="mb-12">
+            <h2 className="text-2xl font-bold text-white mb-4">
+              Ongoing Matches
+            </h2>
+            <div className="space-y-6">
+              {ongoingMatches.map((match) => (
+                <MatchCard key={match.id} match={match} />
+              ))}
             </div>
-          ) : (
-            matches.map((match) => <MatchCard key={match.id} match={match} />)
-          )}
-        </div>
+          </div>
+        )}
+
+        {pastMatches.length > 0 && (
+          <div>
+            <h2 className="text-2xl font-bold text-white mb-4">Past Matches</h2>
+            <div className="space-y-6">
+              {pastMatches.map((match) => (
+                <MatchCard key={match.id} match={match} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {matches.length === 0 && (
+          <div className="text-center py-16 bg-zinc-900 rounded-xl border border-zinc-800">
+            <Gamepad2 className="w-16 h-16 text-zinc-700 mx-auto mb-4" />
+            <p className="text-zinc-400 text-lg">No matches found</p>
+          </div>
+        )}
       </div>
     </div>
   );
