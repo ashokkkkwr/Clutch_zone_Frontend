@@ -139,7 +139,7 @@ function ClutchBucks() {
                 <div className="absolute inset-0 bg-red-500/20 blur-[50px] -z-10" />
                 <img
                   src="https://images.unsplash.com/photo-1607853202273-797f1c22a38e?w=400&h=400&fit=crop"
-                  alt="V-Bucks"
+                  alt="C-Bucks"
                   className="w-20 h-20 object-cover rounded-full ring-2 ring-red-500/20"
                 />
               </div>
@@ -156,7 +156,7 @@ function ClutchBucks() {
                 )}
                 <p className="text-zinc-400 text-sm mb-4">{pkg.description}</p>
                 <p className="text-3xl font-bold text-white">
-                  <span className="text-sm text-zinc-400">USD</span> $
+                  <span className="text-sm text-zinc-400">NRS</span> ₹
                   {pkg.price}
                 </p>
               </div>
@@ -188,7 +188,7 @@ function ClutchBucks() {
                   Instant Delivery
                 </h3>
                 <p className="text-zinc-400 text-sm">
-                  V-Bucks added immediately
+                  C-Bucks added immediately
                 </p>
               </div>
             </div>
@@ -222,7 +222,7 @@ function ClutchBucks() {
     {selectedPackage !== null ? (
       <>
         <Sparkles className="w-5 h-5" />
-        <span>Purchase V-Bucks</span>
+        <span>Purchase C-Bucks</span>
       </>
     ) : (
       "Select a Package"

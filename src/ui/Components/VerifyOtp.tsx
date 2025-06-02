@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { gql, useMutation } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { gql, useMutation } from "@apollo/client";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Key, Mail, Loader2, AlertCircle } from "lucide-react";
 
 interface FormData {
   otp: string;
@@ -15,61 +16,125 @@ const VERIFY_OTP = gql`
 `;
 
 const VerifyOtp: React.FC = () => {
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>();
-  const [verifyOtp, { loading, error }] = useMutation(VERIFY_OTP);
-  const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
+  const defaultEmail = location.state?.email || "";
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm<FormData>({
+    defaultValues: { email: defaultEmail },
+  });
+
+  const [verifyOtp, { loading, error }] = useMutation(VERIFY_OTP);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    if (defaultEmail) {
+      setValue("email", defaultEmail);
+    }
+  }, [defaultEmail, setValue]);
 
   const onSubmit = async (formData: FormData) => {
+    setErrorMessage("");
     try {
       const { data } = await verifyOtp({ variables: formData });
       if (data.verifyOtp) {
-        navigate('/auth/user/login');
+        navigate("/auth/user/login");
       } else {
-        setErrorMessage('Invalid OTP or expired.');
+        setErrorMessage("Invalid OTP or expired.");
       }
     } catch (err: any) {
-      setErrorMessage(err.message || 'Something went wrong.');
+      setErrorMessage(err.message || "Something went wrong.");
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-gray-100">
-      <h2 className="text-2xl font-bold mb-4">Verify OTP</h2>
-      <form 
-        onSubmit={handleSubmit(onSubmit)} 
-        className="bg-white p-6 rounded shadow-md w-full max-w-md"
-      >
-        <div className="mb-4">
-          <label htmlFor="otp" className="block text-sm font-medium text-gray-700">OTP</label>
-          <input
-            type="text"
-            id="otp"
-            {...register('otp', { required: 'OTP is required' })}
-            className={`mt-1 block w-full p-2 border rounded ${errors.otp ? 'border-red-500' : 'border-gray-300'}`}
-          />
-          {errors.otp && <p className="text-red-500 text-sm mt-1">{errors.otp.message}</p>}
+    <div className="flex min-h-screen">
+      {/* Left: OTP Form */}
+      <div className="flex-1 flex flex-col justify-center items-center px-8 bg-gradient-to-b from-slate-900 to-slate-800">
+        <div className="w-full max-w-md space-y-8">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-white">Verify OTP</h1>
+            <p className="mt-2 text-gray-400">
+              Enter the code we just sent to your email.
+            </p>
+          </div>
+
+          {(error || errorMessage) && (
+            <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 flex items-center gap-3 text-red-500">
+              <AlertCircle size={20} />
+              <p>{error?.message || errorMessage}</p>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {/* OTP */}
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-gray-300">OTP</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Key className="h-5 w-5 text-gray-500" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="123456"
+                  {...register("otp", { required: "OTP is required" })}
+                  className={`w-full pl-10 pr-4 py-3 rounded-lg border ${
+                    errors.otp
+                      ? "border-red-500 bg-red-500/10"
+                      : "border-gray-600 bg-gray-800/50"
+                  } text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors`}
+                />
+              </div>
+              {errors.otp && (
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.otp.message}
+                </p>
+              )}
+            </div>
+
+            {/* Email (readonly) */}
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-gray-300">
+                Email address
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-gray-500" />
+                </div>
+                <input
+  type="email"
+  readOnly
+  {...register("email", { required: true })}
+  className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-600 bg-gray-800/50 text-gray-400 cursor-not-allowed"
+/>
+
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 px-4 border border-transparent rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Verifying...
+                </>
+              ) : (
+                "Submit"
+              )}
+            </button>
+          </form>
         </div>
-        <div className="mb-4">
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
-          <input
-            type="email"
-            id="email"
-            {...register('email', { required: 'Email is required' })}
-            className={`mt-1 block w-full p-2 border rounded ${errors.email ? 'border-red-500' : 'border-gray-300'}`}
-          />
-          {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
-        </div>
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 focus:outline-none disabled:bg-blue-300"
-        >
-          {loading ? 'Verifying...' : 'Submit'}
-        </button>
-      </form>
-      {error && <p className="text-red-500 text-sm mt-4">Error: {error.message}</p>}
-      {errorMessage && <p className="text-red-500 text-sm mt-4">{errorMessage}</p>}
+      </div>
+
+     
     </div>
   );
 };

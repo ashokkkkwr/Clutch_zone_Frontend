@@ -40,7 +40,7 @@ const FETCH_TOURNAMENT = gql`
       tournament_streaming_link
       games {
         game_cover_image
-        game_icon_image
+        game_icon
         game_name
         id
       }
@@ -171,7 +171,7 @@ export default function TournamentDetails() {
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <img
-                  src={tournament.games[0]?.game_icon_image || "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&q=80"}
+                  src={tournament.games[0]?.game_icon || "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&q=80"}
                   alt={tournament.games[0]?.game_name}
                   className="w-16 h-16 rounded-lg shadow-md"
                 />

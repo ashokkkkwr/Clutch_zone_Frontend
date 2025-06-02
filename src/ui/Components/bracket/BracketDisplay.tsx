@@ -81,7 +81,6 @@ const TournamentBracket: React.FC = () => {
 
     fetchBracket();
   }, [id]);
-
   const isButtonVisible = (match: Match) => {
     const matchTime = match.match_time;
     const matchDate = new Date(matchTime);
@@ -296,11 +295,11 @@ if (bracket.isPointsBased) {
           </div>
         </div>
 
-        {bracket.isDraft && (
+        {/* {bracket.isDraft && (
           <div className="bg-yellow-900/30 border border-yellow-700 p-4 rounded-lg mb-8 backdrop-blur-sm">
             <p className="text-yellow-400 text-center">{bracket.message}</p>
           </div>
-        )}
+        )} */}
 
         <div className="space-y-8">
           {Object.entries(matchesByRound).map(([round, matches]) => (
@@ -396,14 +395,14 @@ if (bracket.isPointsBased) {
   )
 )}
 
-                    {isButtonVisible(match) && (
+                    {/* {isButtonVisible(match) && (
                       <button 
                         onClick={() => handleOpenModal(match)}
                         className="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg w-full transition duration-300"
                       >
                         Submit Result
                       </button>
-                    )}
+                    )} */}
                   </div>
                 ))}
               </div>

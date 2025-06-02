@@ -2,6 +2,7 @@ import { gql, useMutation, useQuery } from "@apollo/client";
 import React, { useRef, useState } from "react";
 import { UserPlus, Circle, Upload, Loader2, X, Download, Play } from 'lucide-react';
 import axios from "axios";
+import toast from "react-hot-toast";
 
 interface JoinRequest {
   id: string;
@@ -67,6 +68,7 @@ query GetOwnTeams {
       email
       token
       bio
+      avatar
     }
   }
 }
@@ -105,7 +107,8 @@ export default function Overview() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
   const [hoveredVideo, setHoveredVideo] = useState<string | null>(null);
-  
+  const [successMessage, setSuccessMessage] = useState<string>("");
+  const [errorMessage, setErrorMessage]   = useState<string>("");
   const token = localStorage.getItem("token");
   
   if (!token) {
@@ -144,6 +147,7 @@ export default function Overview() {
   } = useQuery(GET_TEAM_MEMBERS, {
     context: { headers: authHeaders },  
   });
+    console.log("🚀 ~ Overview ~ teamMembersData:", teamMembersData)
 
 
   // Mutations
@@ -161,9 +165,15 @@ export default function Overview() {
         variables: { requestId },
         context: { headers: authHeaders }
       });
+      // setSuccessMessage("Join request accepted!");
+      toast.success("Join request accepted!");
+      setTimeout(() => setSuccessMessage(""), 3000);
       await refetchRequests();
     } catch (error) {
       console.error("Error accepting request:", error);
+      toast.error("Failed to accept request.");
+      // setErrorMessage("Failed to accept request.");
+    setTimeout(() => setErrorMessage(""), 3000);
     }
   };
 
@@ -173,8 +183,12 @@ export default function Overview() {
         variables: { requestId },
         context: { headers: authHeaders }
       });
+            toast.success("Join request Rejected!");
+
       await refetchRequests();
+
     } catch (error) {
+      toast.error("Failed to reject request.");
       console.error("Error rejecting request:", error);
     }
   };
@@ -309,7 +323,7 @@ export default function Overview() {
   <div key={team.user.id} className="flex flex-col items-center">
     <div className="relative">
       <img
-        src={`https://api.dicebear.com/7.x/initials/svg?seed=${team.user.username}`}
+        src={`${team.user.avatar}`}
         alt={team.user.username}
         className="w-12 h-12 rounded-full bg-gray-700"
       />
@@ -340,7 +354,12 @@ export default function Overview() {
                     <p className="text-sm font-medium">{request.user.username}</p>
                     <p className="text-xs text-gray-400">{request.user.email}</p>
                   </div>
-                  <div className="flex gap-2">
+                  
+                </div>
+                <p className="text-xs mt-2 text-gray-400">
+                  Status: <span className="capitalize">{request.status}</span>
+                </p>
+                <div className="flex gap-2 mt-2">
                     <button
                       onClick={() => handleAcceptRequest(request.id)}
                       className="px-2 py-1 bg-green-600 hover:bg-green-700 rounded text-xs"
@@ -354,15 +373,12 @@ export default function Overview() {
                       Reject
                     </button>
                   </div>
-                </div>
-                <p className="text-xs mt-2 text-gray-400">
-                  Status: <span className="capitalize">{request.status}</span>
-                </p>
               </div>
             ))}
             {joinRequestsData?.getPendingRequests?.length === 0 && (
               <p className="text-gray-400 text-sm">No pending requests</p>
             )}
+            
           </div>
         </div>
 
@@ -394,7 +410,7 @@ export default function Overview() {
                   </p>
                   <button
                     onClick={() => handleJoinTeam(team.id)}
-                    className="mt-2 w-full bg-orange-500 text-white p-2 rounded-md hover:bg-orange-600"
+                    className="mt-2 w-full bg-[#A855F7] text-white p-2 rounded-md hover:bg-[#9333EA]"
                   >
                     Join Now
                   </button>
@@ -472,7 +488,18 @@ export default function Overview() {
             </div>
           )}
         </div>
+
       </div>
+      {successMessage && (
+        <div className="fixed bottom-4 left-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg">
+          {successMessage}
+        </div>
+      )}
+      {errorMessage && (
+        <div className="fixed bottom-4 left-4 bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg">
+          {errorMessage}
+        </div>
+      )}
     </div>
   );
 }

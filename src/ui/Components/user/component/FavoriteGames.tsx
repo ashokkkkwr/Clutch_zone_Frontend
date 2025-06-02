@@ -9,7 +9,7 @@ const FETCH_GAMES = gql`
       id
       game_name
       game_cover_image
-      game_icon_image
+      game_icon
     }
   }
 `;
@@ -97,7 +97,7 @@ export default function FavoriteGames() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-900 p-8">
+    <div className="w-full bg-gray-900/50 backdrop-blur-sm rounded-xl p-8 border border-gray-700/50">
       {/* Toast Notification */}
       {toast && (
         <div 
@@ -111,47 +111,47 @@ export default function FavoriteGames() {
       )}
 
       {/* Header Section */}
-      <div className="max-w-7xl mx-auto mb-12">
-        <h1 className="text-4xl font-bold text-white mb-4 flex items-center gap-3">
-          <GamepadIcon className="w-8 h-8 text-purple-500" />
-          My Favorite Games
-        </h1>
-        <p className="text-gray-400 text-lg">Manage your collection of favorite games</p>
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="bg-purple-500/20 p-3 rounded-lg">
+            <GamepadIcon className="w-6 h-6 text-purple-500" />
+          </div>
+          <h1 className="text-2xl font-bold text-white">My Favorite Games</h1>
+        </div>
+        <p className="text-gray-400">Manage your collection of favorite games</p>
       </div>
 
       {/* Add Favorite Button */}
-      <div className="max-w-7xl mx-auto mb-12">
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-4 px-6 rounded-xl flex items-center gap-3 transition-all duration-300 hover:transform hover:translate-y-[-2px] hover:shadow-lg"
-        >
-          <Heart className="w-5 h-5" />
-          Add New Favorite
-        </button>
-      </div>
+      <button
+        onClick={() => setIsModalOpen(true)}
+        className="mb-8 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-xl flex items-center gap-3 transition-all duration-300 transform hover:translate-y-[-2px] hover:shadow-lg"
+      >
+        <Heart className="w-5 h-5" />
+        Add New Favorite
+      </button>
 
       {/* Favorite Games Grid */}
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {favouriteGames.map((item: FavoriteGame) => (
           <div 
             key={item.games.id}
-            className="bg-gray-800 rounded-xl overflow-hidden shadow-xl transform transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl"
+            className="bg-gray-800/50 rounded-xl overflow-hidden shadow-xl transform transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl border border-gray-700/50"
           >
-            <div className="relative h-56">
+            <div className="relative h-48">
               <img
                 src={item.games.game_cover_image}
                 alt={item.games.game_name}
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent opacity-60" />
+              <div className="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent" />
               <img
                 src={item.games.game_icon}
                 alt={`${item.games.game_name} icon`}
-                className="absolute -bottom-6 right-6 w-20 h-20 rounded-xl border-4 border-gray-800 shadow-xl"
+                className="absolute -bottom-6 right-6 w-16 h-16 rounded-xl border-4 border-gray-800 shadow-xl"
               />
             </div>
             <div className="p-6 pt-8">
-              <h3 className="text-2xl font-bold text-white mb-2">{item.games.game_name}</h3>
+              <h3 className="text-xl font-bold text-white mb-2">{item.games.game_name}</h3>
               <div className="flex items-center gap-2 text-purple-400">
                 <Heart className="w-4 h-4 fill-current" />
                 <span className="text-sm font-medium">Added to favorites</span>
@@ -163,8 +163,8 @@ export default function FavoriteGames() {
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-900 rounded-2xl p-8 w-full max-w-3xl shadow-2xl transform transition-all duration-300 animate-fade-in">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-gray-900 rounded-2xl p-8 w-full max-w-3xl shadow-2xl transform transition-all duration-300 animate-fade-in border border-gray-700/50">
             <div className="flex justify-between items-center mb-8">
               <h2 className="text-2xl font-bold text-white">Add to Favorites</h2>
               <button
@@ -185,7 +185,7 @@ export default function FavoriteGames() {
                 placeholder="Search for games..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full py-4 pl-12 pr-4 bg-gray-800 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300"
+                className="w-full py-4 pl-12 pr-4 bg-gray-800/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all duration-300 border border-gray-700/50"
               />
             </div>
 
@@ -206,7 +206,7 @@ export default function FavoriteGames() {
               {filteredGames?.map((game: Game) => (
                 <div
                   key={game.id}
-                  className="bg-gray-800 rounded-xl overflow-hidden shadow-lg transform transition-all duration-300 hover:scale-105"
+                  className="bg-gray-800/50 rounded-xl overflow-hidden shadow-lg transform transition-all duration-300 hover:scale-105 border border-gray-700/50"
                 >
                   <div className="relative">
                     <img
@@ -214,14 +214,14 @@ export default function FavoriteGames() {
                       alt={game.game_name}
                       className="w-full h-48 object-cover"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent opacity-60" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent" />
                   </div>
                   <div className="p-4">
                     <h3 className="font-semibold text-white text-lg mb-3 truncate">{game.game_name}</h3>
                     <button
                       onClick={() => handleAddFavorite(game)}
                       disabled={processingGame === game.id}
-                      className="w-full py-3 px-4 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-medium flex items-center justify-center gap-2 transition-all duration-300 disabled:opacity-50"
+                      className="w-full py-3 px-4 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-medium flex items-center justify-center gap-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {processingGame === game.id ? (
                         <Loader2 className="w-5 h-5 animate-spin" />

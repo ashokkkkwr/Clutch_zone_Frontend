@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
-import { gql, useMutation } from "@apollo/client";
 import { NavLink, useNavigate } from "react-router-dom";
 import { Mail, Lock, Loader2, AlertCircle, User } from "lucide-react";
 import { FaFacebook } from "react-icons/fa";
@@ -11,15 +10,8 @@ interface FormData {
   password: string;
 }
 
-const REGISTER_USER = gql`
-  mutation Register($username: String!, $email: String!, $password: String!) {
-    register(username: $username, email: $email, password: $password) {
-      id
-      username
-      email
-    }
-  }
-`;
+const DEFAULT_PROFILE_IMAGE =
+  "https://cdn.vectorstock.com/i/500p/55/86/anonymous-icon-incognito-sign-privacy-vector-34705586.jpg";
 
 const Register: React.FC = () => {
   const {
@@ -27,24 +19,48 @@ const Register: React.FC = () => {
     handleSubmit,
     formState: { errors },
   } = useForm<FormData>();
-  const [registerUser, { loading }] = useMutation(REGISTER_USER);
+
   const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [profileImagePreview, setProfileImagePreview] = useState<string | null>(
+    null
+  );
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+
   const navigate = useNavigate();
 
-  const goVerify = () => navigate("/auth/user/otp");
+  // Navigate to OTP page, carrying email in state
+  const goVerify = (email: string) =>
+    navigate("/auth/user/otp", { state: { email } });
 
-  const onSubmit = async (formData: FormData) => {
+
+  const onSubmit = async (data: FormData) => {
+    setLoading(true);
+    setErrorMessage("");
     try {
-      await registerUser({
-        variables: {
-          username: formData.username,
-          email: formData.email,
-          password: formData.password,
-        },
+      const formDataToSend = new FormData();
+      formDataToSend.append("username", data.username);
+      formDataToSend.append("email", data.email);
+      formDataToSend.append("password", data.password);
+
+      if (profileImageFile) {
+        formDataToSend.append("image", profileImageFile);
+      }
+
+      const response = await fetch("http://localhost:5000/api/user/register", {
+        method: "POST",
+        body: formDataToSend,
       });
-      goVerify();
+
+      if (response.ok) {
+        goVerify(data.email);
+      } else {
+        setErrorMessage("Something went wrong. Please try again.");
+      }
     } catch (err: any) {
       setErrorMessage("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -70,6 +86,7 @@ const Register: React.FC = () => {
           )}
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {/* Full Name */}
             <div className="space-y-1">
               <label className="text-sm font-medium text-gray-300">
                 Full Name
@@ -80,15 +97,15 @@ const Register: React.FC = () => {
                 </div>
                 <input
                   type="text"
+                  placeholder="John Doe"
+                  {...register("username", {
+                    required: "Full name is required",
+                  })}
                   className={`w-full pl-10 pr-4 py-3 rounded-lg border ${
                     errors.username
                       ? "border-red-500 bg-red-500/10"
                       : "border-gray-600 bg-gray-800/50"
                   } text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
-                  placeholder="John Doe"
-                  {...register("username", {
-                    required: "Full name is required",
-                  })}
                 />
               </div>
               {errors.username && (
@@ -98,6 +115,7 @@ const Register: React.FC = () => {
               )}
             </div>
 
+            {/* Email */}
             <div className="space-y-1">
               <label className="text-sm font-medium text-gray-300">
                 Email address
@@ -108,11 +126,6 @@ const Register: React.FC = () => {
                 </div>
                 <input
                   type="email"
-                  className={`w-full pl-10 pr-4 py-3 rounded-lg border ${
-                    errors.email
-                      ? "border-red-500 bg-red-500/10"
-                      : "border-gray-600 bg-gray-800/50"
-                  } text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
                   placeholder="you@example.com"
                   {...register("email", {
                     required: "Email is required",
@@ -121,30 +134,40 @@ const Register: React.FC = () => {
                       message: "Please enter a valid email address",
                     },
                   })}
+                  className={`w-full pl-10 pr-4 py-3 rounded-lg border ${
+                    errors.email
+                      ? "border-red-500 bg-red-500/10"
+                      : "border-gray-600 bg-gray-800/50"
+                  } text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
                 />
               </div>
               {errors.email && (
-                <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.email.message}
+                </p>
               )}
             </div>
 
+            {/* Password */}
             <div className="space-y-1">
-              <label className="text-sm font-medium text-gray-300">Password</label>
+              <label className="text-sm font-medium text-gray-300">
+                Password
+              </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Lock className="h-5 w-5 text-gray-500" />
                 </div>
                 <input
                   type="password"
+                  placeholder="Create a password"
+                  {...register("password", {
+                    required: "Password is required",
+                  })}
                   className={`w-full pl-10 pr-4 py-3 rounded-lg border ${
                     errors.password
                       ? "border-red-500 bg-red-500/10"
                       : "border-gray-600 bg-gray-800/50"
                   } text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
-                  placeholder="Create a password"
-                  {...register("password", {
-                    required: "Password is required",
-                  })}
                 />
               </div>
               {errors.password && (
@@ -152,6 +175,42 @@ const Register: React.FC = () => {
                   {errors.password.message}
                 </p>
               )}
+            </div>
+
+            {/* Profile Picture Upload with Preview */}
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-gray-300">
+                Profile Picture
+              </label>
+              <div className="flex items-center space-x-4">
+                <div>
+                  {profileImagePreview ? (
+                    <img
+                      src={profileImagePreview}
+                      alt="Profile Preview"
+                      className="w-16 h-16 object-cover rounded-full border border-gray-600"
+                    />
+                  ) : (
+                    <img
+                      src={DEFAULT_PROFILE_IMAGE}
+                      alt="Default Profile"
+                      className="w-16 h-16 object-cover rounded-full border border-gray-600"
+                    />
+                  )}
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      const file = e.target.files[0];
+                      setProfileImagePreview(URL.createObjectURL(file));
+                      setProfileImageFile(file);
+                    }
+                  }}
+                  className="text-gray-300 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-gray-700 file:text-white hover:file:bg-gray-600 focus:outline-none"
+                />
+              </div>
             </div>
 
             <button
@@ -198,31 +257,33 @@ const Register: React.FC = () => {
 
           <p className="text-center text-sm text-gray-400">
             Already have an account?{" "}
-         
-            <button className="text-blue-500 hover:text-blue-400 " onClick={ ()=>navigate("/auth/user/login")}>
+            <button
+              className="text-blue-500 hover:text-blue-400"
+              onClick={() => navigate("/auth/user/login")}
+            >
               Sign in
             </button>
-           
           </p>
-         
-          {/* <NavLink to="/user/tournament" className={({ isActive }) => (isActive ? activeLinkClass : defaultLinkClass)}>
-              <Trophy className="w-4 h-4" />
-              <span>Tournament</span>
-            </NavLink> */}
         </div>
       </div>
 
       {/* Right Section - Image */}
-      <div className="hidden lg:block flex-1 bg-cover bg-center" style={{
-        backgroundImage: "url('https://media.livewallpapers.com/images/high/vibrant-gaming-neon-wallpaper-1.webp')"
-      }}>
+      <div
+        className="hidden lg:block flex-1 bg-cover bg-center"
+        style={{
+          backgroundImage:
+            "url('https://media.livewallpapers.com/images/high/vibrant-gaming-neon-wallpaper-1.webp')",
+        }}
+      >
         <div className="h-full w-full backdrop-blur-sm bg-slate-900/30 flex items-center justify-center p-12">
           <div className="max-w-xl text-center">
             <h2 className="text-3xl font-bold text-white mb-4">
               Join Our Gaming Community
             </h2>
             <p className="text-gray-200">
-              Create your account today and become part of an exciting gaming community. Connect with fellow gamers, compete in tournaments, and unlock exclusive rewards.
+              Create your account today and become part of an exciting gaming
+              community. Connect with fellow gamers, compete in tournaments,
+              and unlock exclusive rewards.
             </p>
           </div>
         </div>

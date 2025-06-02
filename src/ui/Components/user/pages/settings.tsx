@@ -4,9 +4,11 @@ import LanguageToggle from '../component/LanguageToggle';
 // import ChangePassword from '../component/passwordChange/ChangePassword';
 import PasswordChange from '../component/passwordChange/PasswordChange';
 import ForgotPassword from '../component/forgotPassword/ForgotPassword';
-
+import useLang from "../../../../hooks/useLang";
+import { settingLabel } from '../../../../localization/settingLabel';
 function Setting() {
   const [selectedSetting, setSelectedSetting] = useState<string | null>(null);
+  const { lang } = useLang();
 
   const handleSettingClick = (setting: string) => {
     setSelectedSetting(setting);

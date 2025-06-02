@@ -41,7 +41,7 @@ const Login: React.FC = () => {
       
       if (response?.data?.login?.token) {
         localStorage.setItem("token", response.data.login.token);
-        if (response?.data?.login?.role === "admin") {
+        if (response?.data?.login?.role === "ADMIN") {
           navigate("/admin/dashboard");
         } else {
           navigate("/user/home");

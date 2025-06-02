@@ -33,6 +33,8 @@ import {
   Bar,
   Legend,
 } from "recharts";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 interface ApiResponse {
   success: boolean;
@@ -78,7 +80,7 @@ interface Stats {
   matches: {
     total: number;
     scoreSubmissionStatusDistribution: Array<{
-      status: String;
+      status: string;
       _count: {
         status: number;
       };
@@ -118,27 +120,25 @@ const StatCard = ({ title, value, icon: Icon, color, children }: any) => (
 );
 
 export default function Dashboard() {
-  const [dashboardStats, setDashboardStats] = React.useState<Stats | null>(
-    null
-  );
-  const [loading, setLoading] = React.useState(true);
-  const [timeRange, setTimeRange] = React.useState("week");
-  const [userActivityData, setUserActivityData] = React.useState([]);
+  const [dashboardStats, setDashboardStats] = useState<Stats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [timeRange, setTimeRange] = useState("week");
+  const [userActivityData, setUserActivityData] = useState([]);
   const [time, setTime] = useState(new Date());
 
   useEffect(() => {
     const interval = setInterval(() => {
       setTime(new Date());
     }, 1000);
-
     return () => clearInterval(interval);
   }, []);
+
   const fetchDashboardStats = async () => {
     try {
       const response = await axios.get<ApiResponse>(
         "http://localhost:5000/api/dashboard/get"
       );
-      console.log("🚀 ~ fetchDashboardStats ~ response:", response)
+      console.log("🚀 ~ fetchDashboardStats ~ response:", response);
       setDashboardStats(response.data.data);
       setUserActivityData(response.data.data.users.weekly);
     } catch (error) {
@@ -147,9 +147,29 @@ export default function Dashboard() {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     fetchDashboardStats();
   }, []);
+
+  // Function to generate and download PDF
+  const handleGenerateReport = () => {
+    // Select the element to capture as PDF. Here we assume your entire dashboard is within the div with id "dashboard-content".
+    const dashboardElement = document.getElementById("dashboard-content");
+    if (dashboardElement) {
+      html2canvas(dashboardElement, { scale: 2 }).then((canvas) => {
+        const imgData = canvas.toDataURL("image/png");
+        const pdf = new jsPDF("p", "mm", "a4");
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        // Calculate height to preserve aspect ratio
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+        pdf.save("report.pdf");
+      });
+    } else {
+      console.error("Dashboard element not found!");
+    }
+  };
 
   if (loading) {
     return (
@@ -161,7 +181,7 @@ export default function Dashboard() {
 
   if (!dashboardStats) return null;
 
-  const getStatusColor = (status: String) => {
+  const getStatusColor = (status: string) => {
     const colors: { [key: string]: string } = {
       COMPLETED: "text-green-400",
       PENDING: "text-yellow-400",
@@ -171,35 +191,23 @@ export default function Dashboard() {
     return colors[status.toString()] || "text-gray-400";
   };
 
-  // Sample data for charts
-  //   const userActivityData = [
-  //     { name: 'Mon', users: 120 },
-  //     { name: 'Tue', users: 150 },
-  //     { name: 'Wed', users: 180 },
-  //     { name: 'Thu', users: 190 },
-  //     { name: 'Fri', users: 220 },
-  //     { name: 'Sat', users: 250 },
-  //     { name: 'Sun', users: 280 },
-  //   ];
-
-  const matchStatusData =
-    dashboardStats.matches.scoreSubmissionStatusDistribution.map((status) => ({
+  const matchStatusData = dashboardStats.matches.scoreSubmissionStatusDistribution.map(
+    (status) => ({
       name: status.status,
       value: status._count.status,
-    }));
-
-  const gamePopularityData = dashboardStats.games.favoritesByGame.map(
-    (game) => ({
-      name: `Game ${game.game_id}`,
-      favorites: game._count.game_id,
     })
   );
 
+  const gamePopularityData = dashboardStats.games.favoritesByGame.map((game) => ({
+    name: `Game ${game.game_id}`,
+    favorites: game._count.game_id,
+  }));
+
   return (
     <div className="min-h-screen bg-gray-900 w-screen">
-     
-
-      <div className="max-w-7xl mx-auto p-8">
+      {/* Wrap your dashboard content in a container with an id.
+          This container will be captured for the PDF */}
+      <div id="dashboard-content" className="max-w-7xl mx-auto p-8">
         {/* Header Section */}
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -208,12 +216,15 @@ export default function Dashboard() {
           </div>
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2 bg-gray-800 p-2 rounded-lg">
-            <Clock className="w-4 h-4 text-gray-400" />
-            <span className="bg-transparent text-gray-400">
+              <Clock className="w-4 h-4 text-gray-400" />
+              <span className="bg-transparent text-gray-400">
                 {time.toLocaleTimeString()}
               </span>
             </div>
-            <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
+            <button
+              onClick={handleGenerateReport}  // Attach our PDF generation function
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
+            >
               <Activity className="w-4 h-4" />
               <span>Generate Report</span>
             </button>
